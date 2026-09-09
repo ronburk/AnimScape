@@ -14,7 +14,7 @@ async function open_svg_file() {
     } catch (error) {
         svg_document = null;
         keyframe_button.disabled = true;
-        status.textContent = "Choose an SVG file to begin.";
+        status.textContent = "Open failed: " + error.message;
     }
 }
 
@@ -23,7 +23,7 @@ async function save_svg_file() {
         await file_io.save_svg(svg_document, svg_document.text);
         status.textContent = "SVG file saved.";
     } catch (error) {
-        status.textContent = "SVG file loaded.";
+        status.textContent = "Save failed: " + error.message;
     }
 }
 
@@ -33,7 +33,7 @@ function create_keyframe() {
         draw_svg(svg_document.text);
         status.textContent = "Keyframe added.";
     } catch (error) {
-        status.textContent = "SVG file loaded.";
+        status.textContent = "Add keyframe failed: " + error.message;
     }
 }
 
