@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns:xi="http://www.w3.org/2001/XInclude">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>AnimScape</title>
+    </head>
+    <body>
+        <h1>AnimScape</h1>
+        <p id="status">The initial HTML pipeline is working.</p>
+        <script type="text/javascript"><xi:include href="mainjs.xml" parse="text"/></script>
+    </body>
+</html>
