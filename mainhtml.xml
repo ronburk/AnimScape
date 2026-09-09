@@ -6,7 +6,9 @@
     </head>
     <body>
         <h1>AnimScape</h1>
-        <p id="status">The initial HTML pipeline is working.</p>
+        <p id="status">Choose an SVG file to begin.</p>
+        <button id="svg-file-button" type="button">Open SVG File</button>
+        <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
     </body>
 </html>
