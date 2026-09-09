@@ -2,6 +2,7 @@ const svg_file_button = document.getElementById("svg-file-button");
 const add_keyframe_button = document.getElementById("add-keyframe-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
+const file_controls = document.getElementById("file-controls");
 const keyframe_list = document.getElementById("keyframe-list");
 let svg_document = null;
 const keyframe_ui = { layers: [], selected_index: 0 };
@@ -18,6 +19,7 @@ function refresh_keyframe_ui() {
     render_keyframe_thumbnails(parsed, keyframe_ui.selected_index);
     delete_keyframe_button.disabled = keyframe_ui.layers.length <= 1;
     keyframe_panel.hidden = false;
+    file_controls.hidden = true;
 }
 
 async function open_svg_file() {
