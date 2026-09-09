@@ -4,6 +4,7 @@
         html, body { height: 100%; margin: 0; }
         #svg-viewer { width: 100%; height: 85vh; }
         #keyframe-panel { height: 15vh; }
+        #file-controls { height: 15vh; }
         #keyframe-list { display: flex; gap: 8px; overflow-x: auto; height: calc(100% - 32px); }
         .keyframe-thumbnail { flex: 0 0 120px; padding: 2px; border: 2px solid transparent; }
         .keyframe-thumbnail.selected { border-color: #06c; }
@@ -12,10 +13,12 @@
     </style></head>
     <body>
         <div id="svg-viewer"></div>
+        <div id="file-controls">
+            <button id="svg-file-button" type="button">Open</button>
+        </div>
         <div id="keyframe-panel" hidden="hidden">
             <div id="keyframe-list" role="list"></div>
             <div id="keyframe-controls">
-                <button id="svg-file-button" type="button">Open</button>
                 <button id="add-keyframe-button" type="button">Add Keyframe</button>
                 <button id="delete-keyframe-button" type="button">Delete Keyframe</button>
             </div>
