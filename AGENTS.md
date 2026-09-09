@@ -22,3 +22,8 @@
 - This exercises the real UI, `svg.js`, SVG parsing, rendering, keyframe creation, serialization, and reopen/save round trips. It does not test Chromium's native directory picker, filesystem permissions, actual disk writes, or persistence of native directory handles in IndexedDB.
 - Keep the adapter out of the production XSLT build and repository unless explicitly requested. Use the shared browser-facing file path under `/workspace/scratch` (mapped to `/home/oai/share`) when supplying files to the cloud browser.
 - When a test reveals an application defect, report it separately from adapter limitations. In particular, duplicated SVG objects currently retain their original SVG `id` values and do not automatically receive AnimScape object identity attributes; do not mistake that for a file-I/O failure.
+
+### Response formatting
+
+- Complete raw `<svg>` examples in assistant responses may be interpreted by the interface as visual SVG artifacts and render blank or misleading previews.
+- For SVG schema examples, prefer escaped XML, short fragments, or clearly marked `xml` code blocks; do not rely on the rendered SVG preview as evidence about the code.
