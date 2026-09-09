@@ -14,9 +14,10 @@ const keyframe_ui = { layers: [], selected_index: 0 };
 const playback = {
     running: false,
     frame_index: 0,
-    transition_start: 0,
+    transition_start: null,
     animation_frame: null,
-    progress: 0
+    progress: 0,
+    last_now: null
 };
 
 function update_duration_input() {
@@ -28,7 +29,7 @@ function stop_playback() {
     if (playback.running && svg_document) {
         const duration = get_keyframe_duration(keyframe_ui.layers[playback.frame_index]);
         playback.progress = duration === 0 ? 1 : Math.min(1, Math.max(0,
-            (performance.now() - playback.transition_start) / (duration * 1000)));
+            (playback.last_now - playback.transition_start) / (duration * 1000)));
     }
     if (playback.animation_frame !== null) cancelAnimationFrame(playback.animation_frame);
     playback.running = false;
@@ -41,8 +42,11 @@ function render_playback_frame(now) {
     const current = playback.frame_index;
     const next = current + 1;
     const duration = get_keyframe_duration(keyframe_ui.layers[current]);
+    if (playback.transition_start === null)
+        playback.transition_start = now - playback.progress * duration * 1000;
     const progress = duration === 0 ? 1 : Math.min(1,
         Math.max(0, (now - playback.transition_start) / (duration * 1000)));
+    playback.last_now = now;
     playback.progress = progress;
     show_keyframe_transition(parse_svg(svg_document.text), current, next, progress);
     if (progress >= 1) {
@@ -62,10 +66,12 @@ function render_playback_frame(now) {
 }
 
 function start_playback() {
-    if (keyframe_ui.layers.length < 2 || keyframe_ui.selected_index >= keyframe_ui.layers.length - 1) return;
+    if (keyframe_ui.layers.length < 2 || keyframe_ui.selected_index >= keyframe_ui.layers.length - 1) {
+        return;
+    }
     playback.frame_index = keyframe_ui.selected_index;
-    playback.transition_start = performance.now() - playback.progress *
-        get_keyframe_duration(keyframe_ui.layers[playback.frame_index]) * 1000;
+    playback.transition_start = null;
+    playback.last_now = null;
     playback.running = true;
     play_button.textContent = "Pause";
     playback.animation_frame = requestAnimationFrame(render_playback_frame);
@@ -81,6 +87,8 @@ function select_keyframe(index) {
     keyframe_ui.selected_index = Math.max(0, Math.min(index, keyframe_ui.layers.length - 1));
     playback.frame_index = keyframe_ui.selected_index;
     playback.progress = 0;
+    playback.transition_start = null;
+    playback.last_now = null;
     refresh_keyframe_ui();
 }
 
