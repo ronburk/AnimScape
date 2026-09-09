@@ -5,6 +5,7 @@ let svg_document = null;
 async function open_svg_file() {
     try {
         svg_document = await file_io.open_svg();
+        draw_svg(svg_document.text);
         status.textContent = "SVG file loaded.";
         svg_file_button.textContent = "Save SVG File";
         svg_file_button.onclick = save_svg_file;
