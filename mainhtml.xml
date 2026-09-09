@@ -3,12 +3,20 @@
     <head>
         <meta charset="UTF-8"/>
         <title>AnimScape</title>
+        <style>
+            #svg-viewer {
+                width: 100%;
+                height: 80vh;
+            }
+        </style>
     </head>
     <body>
         <h1>AnimScape</h1>
         <p id="status">Choose an SVG file to begin.</p>
         <button id="svg-file-button" type="button">Open SVG File</button>
+        <div id="svg-viewer"></div>
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
+        <script type="text/javascript"><xi:include href="svg.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
     </body>
 </html>
