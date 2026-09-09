@@ -4,7 +4,7 @@
     <body>
         <div id="svg-viewer"></div>
         <div id="controls">
-            <button id="svg-file-button" type="button">Save</button>
+            <button id="svg-file-button" type="button">Open</button>
             <button id="keyframe-button" type="button" disabled="disabled">Add</button>
         </div>
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
