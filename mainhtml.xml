@@ -14,6 +14,7 @@
         <h1>AnimScape</h1>
         <p id="status">Choose an SVG file to begin.</p>
         <button id="svg-file-button" type="button">Open SVG File</button>
+        <button id="keyframe-button" type="button" disabled>Add Keyframe</button>
         <div id="svg-viewer"></div>
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="svg.js" parse="text"/></script>
