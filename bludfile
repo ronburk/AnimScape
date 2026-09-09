@@ -1,2 +1,2 @@
-AnimScape.html: mainhtml.xml main.js build.xslt
+AnimScape.html: mainhtml.xml fileio.js main.js build.xslt
     xsltproc --xinclude build.xslt mainhtml.xml > AnimScape.html
