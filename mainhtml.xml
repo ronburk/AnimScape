@@ -19,6 +19,10 @@
         <div id="keyframe-panel" hidden="hidden">
             <div id="keyframe-list" role="list"></div>
             <div id="keyframe-controls">
+                <button id="previous-keyframe-button" type="button">◀</button>
+                <button id="play-button" type="button">Play</button>
+                <button id="next-keyframe-button" type="button">▶</button>
+                <label>Time to next: <input id="duration-input" type="number" min="0" step="0.1" value="1.0"/></label>
                 <button id="add-keyframe-button" type="button">Add Keyframe</button>
                 <button id="delete-keyframe-button" type="button">Delete Keyframe</button>
             </div>
