@@ -1,21 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <html xmlns:xi="http://www.w3.org/2001/XInclude">
-    <head>
-        <meta charset="UTF-8"/>
-        <title>AnimScape</title>
-        <style>
-            #svg-viewer {
-                width: 100%;
-                height: 80vh;
-            }
-        </style>
-    </head>
+    <head><meta charset="UTF-8"/><title>AnimScape</title><style>html, body { height: 100%; margin: 0; } #svg-viewer { width: 100%; height: 85%; } #controls { height: 15%; }</style></head>
     <body>
-        <h1>AnimScape</h1>
-        <p id="status">Choose an SVG file to begin.</p>
-        <button id="svg-file-button" type="button">Open SVG File</button>
-        <button id="keyframe-button" type="button" disabled="disabled">Add Keyframe</button>
         <div id="svg-viewer"></div>
+        <div id="controls">
+            <button id="svg-file-button" type="button">Save</button>
+            <button id="keyframe-button" type="button" disabled="disabled">Add</button>
+        </div>
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="svg.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
