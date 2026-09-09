@@ -1,5 +1,6 @@
 const inkscape_namespace = "http://www.inkscape.org/namespaces/inkscape";
 const animscape_namespace = "https://animscape.example/ns";
+const default_keyframe_duration = 1.0;
 
 function parse_svg(svg_text) {
     const parsed = new DOMParser().parseFromString(svg_text, "image/svg+xml");
@@ -33,6 +34,29 @@ function show_keyframe(svg_document, index) {
     draw_svg(serialize_display_svg(copy));
 }
 
+function get_keyframe_duration(layer) {
+    const duration = Number.parseFloat(layer.getAttributeNS(animscape_namespace, "duration"));
+    return Number.isFinite(duration) && duration >= 0 ? duration : default_keyframe_duration;
+}
+
+function set_keyframe_duration(layer, duration) {
+    const svg = layer.ownerDocument.documentElement;
+    if (!svg.hasAttributeNS("http://www.w3.org/2000/xmlns/", "animscape"))
+        svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:animscape", animscape_namespace);
+    layer.setAttributeNS(animscape_namespace, "animscape:duration", String(duration));
+}
+
+function show_keyframe_transition(svg_document, current_index, next_index, progress) {
+    const copy = svg_document.documentElement.cloneNode(true);
+    const layers = get_keyframe_layers({documentElement: copy});
+    layers.forEach((layer, index) => {
+        if (index !== current_index && index !== next_index) layer.style.display = "none";
+    });
+    layers[current_index].style.opacity = String(1 - progress);
+    layers[next_index].style.opacity = String(progress);
+    draw_svg(serialize_display_svg(copy));
+}
+
 function render_keyframe_thumbnails(svg_document, selected_index) {
     const layers = get_keyframe_layers(svg_document);
     keyframe_list.replaceChildren();
@@ -52,9 +76,11 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         label.textContent = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
         button.append(label);
         button.onclick = () => {
+            stop_playback();
             keyframe_ui.selected_index = index;
             show_keyframe(svg_document, index);
             render_keyframe_thumbnails(svg_document, index);
+            update_duration_input();
         };
         keyframe_list.append(button);
     });
@@ -70,6 +96,8 @@ function add_keyframe(svg_text, selected_index) {
     const svg = parsed.documentElement;
     const layers = get_keyframe_layers(parsed);
     if (layers.length === 0) throw new Error("The SVG has no Inkscape layers.");
+    if (!svg.hasAttributeNS("http://www.w3.org/2000/xmlns/", "animscape"))
+        svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:animscape", animscape_namespace);
     const source = layers[selected_index];
     if (!source) throw new Error("Invalid keyframe selection.");
     const copy = source.cloneNode(true);
