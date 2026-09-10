@@ -198,7 +198,7 @@ function add_keyframe(svg_text, selected_index) {
     });
     copy.querySelectorAll("*").forEach(element => {
         Array.from(element.attributes).forEach(attribute => {
-            let value = attribute.value.replace(/url\\(#([^)]*)\\)/g,
+            let value = attribute.value.replace(/url\(#([^)]*)\)/g,
                 (match, id) => id_map.has(id) ? "url(#" + id_map.get(id) + ")" : match);
             value = value.replace(/^#(.+)$/, (match, id) =>
                 id_map.has(id) ? "#" + id_map.get(id) : match);
