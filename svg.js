@@ -150,13 +150,7 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         label.className = "keyframe-thumbnail-label";
         label.textContent = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
         button.append(label);
-        button.onclick = () => {
-            stop_playback();
-            keyframe_ui.selected_index = index;
-            show_keyframe(svg_document, index);
-            render_keyframe_thumbnails(svg_document, index);
-            update_duration_input();
-        };
+        button.onclick = () => select_keyframe(index);
         keyframe_list.append(button);
     });
 }
