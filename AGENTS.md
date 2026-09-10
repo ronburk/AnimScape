@@ -1,10 +1,23 @@
 # Agent instructions
 
-- Use the GitHub connector for all AnimScape repository operations.
-- A simple `git clone` of the public repository is sufficient to obtain an up-to-date checkout; no special reconstruction or synchronization procedure is needed.
-- Do not assume that a local shell clone or GitHub CLI credentials are available.
-- If installing a Debian/Ubuntu package fails because APT cannot use its sandbox or cache, try:
-  `mkdir -p /tmp/apt-archives/partial && apt-get -o APT::Sandbox::User=root -o Dir::Cache::archives=/tmp/apt-archives install -y PACKAGE`
+- The repository is public. For a fresh checkout, run `git clone https://github.com/ronburk/AnimScape.git`. No GitHub credentials or special reconstruction procedure is needed.
+- To update an existing clean checkout of `main`, run `git pull --ff-only`.
+- Use the GitHub connector for remote writes, including branches, commits, pull requests, and merges. Local Git commands are available for checkout and inspection.
+
+## Build setup
+
+- The build requires `xsltproc` on PATH and a working `./blud` executable in the repository root.
+- If `xsltproc` is missing in the current runtime, install it. Refresh APT's package lists first; otherwise installation can fail with "Unable to locate package xsltproc". These commands also handle the cloud environment's APT sandbox/cache problems:
+
+  ```sh
+  mkdir -p /tmp/apt-archives/partial
+  apt-get -o APT::Sandbox::User=root -o Dir::Cache::archives=/tmp/apt-archives update
+  apt-get -o APT::Sandbox::User=root -o Dir::Cache::archives=/tmp/apt-archives install -y xsltproc
+  ```
+
+- The `blud` executable is not included in this repository. Reuse an existing working executable for the current platform by copying it into the checkout as `./blud`; keep it out of commits. For the cloud build on 2026-09-10, it was copied from `/workspace/scratch/71285664f620/AnimScape/blud`. That is a session-specific scratch path, not a permanent dependency. If no executable is available, obtain/build one from `ronburk/blud` using that repository's build instructions.
+- From the AnimScape repository root, run `./blud`. It runs `xsltproc --xinclude build.xslt mainhtml.xml > AnimScape.html`. The generated standalone page is intentionally ignored by Git.
+- A successful build is sufficient for this setup step; browser testing is a separate step described below.
 
 ## Browser testing
 
