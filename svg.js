@@ -150,6 +150,10 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         label.className = "keyframe-thumbnail-label";
         label.textContent = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
         button.append(label);
+        const duration = document.createElement("span");
+        duration.className = "keyframe-thumbnail-duration";
+        duration.textContent = index + 1 < layers.length ? get_keyframe_duration(layer) + "s" : "end";
+        button.append(duration);
         button.onclick = () => select_keyframe(index);
         keyframe_list.append(button);
     });
