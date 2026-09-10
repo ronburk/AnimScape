@@ -15,7 +15,7 @@
   apt-get -o APT::Sandbox::User=root -o Dir::Cache::archives=/tmp/apt-archives install -y xsltproc
   ```
 
-- The `blud` executable is not included in this repository. Reuse an existing working executable for the current platform by copying it into the checkout as `./blud`; keep it out of commits. For the cloud build on 2026-09-10, it was copied from `/workspace/scratch/71285664f620/AnimScape/blud`. That is a session-specific scratch path, not a permanent dependency. If no executable is available, obtain/build one from `ronburk/blud` using that repository's build instructions.
+- The `blud` executable is not included in this repository. Reuse an existing working executable for the current platform by copying it into the checkout as `./blud`; keep it out of commits. If no executable is available, obtain/build one from `ronburk/blud` using that repository's build instructions.
 - From the AnimScape repository root, run `./blud`. It runs `xsltproc --xinclude build.xslt mainhtml.xml > AnimScape.html`. The generated standalone page is intentionally ignored by Git.
 - A successful build is sufficient for this setup step; browser testing is a separate step described below.
 
@@ -26,16 +26,16 @@
 - For actual browser rendering and DOM inspection, use the supported supervised preview service. Read the control-browser skill and the Sites environment instructions before doing this. Obtain the browser skill's absolute runtime directory from the `skill_root` returned by `skills.read`; do not guess its location.
 - Follow the Sites execution-profile setup before starting preview: from the checkout, run `node <sites-building-skill-root>/scripts/configure-execution-profile.mjs --detect`. For this plain project, `configured: false` or an equivalent managed-linux profile result is expected; do not replace the existing build with a Sites starter.
 - `sites-preview` requires a `package.json` with a `dev` script and serves through the internal URL `http://terminal.local:4173/`. Navigate only to that URL; do not try alternate hosts or ports.
-- This project is a plain static XML/XSLT build, so use an untracked, test-only Node HTTP adapter when browser testing is needed. The adapter should serve only the generated `AnimScape.html`, accept the forwarded `--host`, `--port`, and `--strictPort` arguments, and return 404 for other paths. Do not add the adapter or `package.json` to the project unless explicitly requested.
-- Start with `sites-preview start "$PWD"`, inspect the page in the cloud browser, then run `sites-preview stop`. A successful basic check should verify the title, visible Open button, DOM state, console errors, and a screenshot when visual inspection is requested.
+- This project is a plain static XML/XSLT build, so use the versioned Node HTTP adapter in `agent-files/` when browser testing is needed. It serves only the generated `AnimScape.html`, accepts the forwarded `--host`, `--port`, and `--strictPort` arguments, and returns 404 for other paths.
+- Start with `sites-preview start "$PWD/agent-files"`, inspect the page in the cloud browser, then run `sites-preview stop`. A successful basic check should verify the title, visible Open button, DOM state, console errors, and a screenshot when visual inspection is requested.
 - Ignore unrelated console errors originating from the browser-control extension itself; distinguish them from errors whose URL is the AnimScape page.
 - Do not attempt `data:`, `file:`, loopback, raw GitHub, or other alternate URLs as a workaround. The supported preview URL is the only browser target.
 
-### Minimal preview adapter
+### Preview adapter
 
-The following setup was used successfully with the managed Linux cloud browser. Keep these two files untracked in the AnimScape checkout and reuse them if present. They use Node's built-in modules; no `npm install` is needed.
+The versioned adapter consists of these files:
 
-`package.json`:
+`agent-files/package.json`:
 
 ```json
 {
@@ -46,7 +46,7 @@ The following setup was used successfully with the managed Linux cloud browser. 
 }
 ```
 
-`preview-server.mjs`:
+`agent-files/preview-server.mjs`:
 
 ```js
 // Temporary cloud-browser adapter; excluded from the production build.
@@ -69,7 +69,7 @@ createServer(async (request, response) => {
         return;
     }
     try {
-        const html = await readFile(new URL('./AnimScape.html', import.meta.url));
+        const html = await readFile(new URL('../AnimScape.html', import.meta.url));
         response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
         response.end(html);
     } catch (error) {
@@ -84,7 +84,7 @@ Follow the Sites skill's execution-profile setup first. For this plain XML/XSLT 
 From the checkout, start the supervised server:
 
 ```sh
-sites-preview start "$PWD"
+sites-preview start "$PWD/agent-files"
 ```
 
 In the browser session initialized by the control-browser skill, use the supported browser API:
