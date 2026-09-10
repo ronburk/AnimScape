@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   sodipodi:docname="refernces-test.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:animscape="https://animscape.example/ns">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.029826"
+     inkscape:cx="397.15447"
+     inkscape:cy="561.25986"
+     inkscape:window-width="2494"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="animscape-keyframe-2"
+     animscape:object-id="object-1" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient1"
+       inkscape:collect="always"
+       animscape:object-id="object-2">
+      <stop
+         style="stop-color:#666666;stop-opacity:1;"
+         offset="0"
+         id="stop1"
+         animscape:object-id="object-3" />
+      <stop
+         style="stop-color:#666666;stop-opacity:0;"
+         offset="1"
+         id="stop2"
+         animscape:object-id="object-4" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1"
+       id="linearGradient2"
+       x1="40.593426"
+       y1="72.451553"
+       x2="58.834774"
+       y2="99.68512"
+       gradientUnits="userSpaceOnUse"
+       animscape:object-id="object-5" />
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath3"
+       animscape:object-id="object-6">
+      <path
+         style="fill:#ffff00;stroke-width:0.264583"
+         id="path3"
+         sodipodi:type="arc"
+         sodipodi:cx="24.150518"
+         sodipodi:cy="53.696365"
+         sodipodi:rx="25.948961"
+         sodipodi:ry="32.628895"
+         sodipodi:start="0"
+         sodipodi:end="1.7966465"
+         sodipodi:arc-type="slice"
+         d="M 50.09948,53.696365 A 25.948961,32.628895 0 0 1 40.314711,79.221412 25.948961,32.628895 0 0 1 18.339637,85.496619 L 24.150518,53.696365 Z"
+         animscape:object-id="object-7" />
+    </clipPath>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1"
+       id="linearGradient3"
+       gradientUnits="userSpaceOnUse"
+       x1="40.593426"
+       y1="72.451553"
+       x2="58.834774"
+       y2="99.68512" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:url(#linearGradient2);stroke-width:0.264583"
+       id="rect1"
+       width="37.25346"
+       height="35.968861"
+       x="24.150518"
+       y="57.293251"
+       clip-path="url(#clipPath3)"
+       animscape:object-id="object-8" />
+  </g>
+  <g
+     inkscape:label="Keyframe 2"
+     inkscape:groupmode="layer"
+     id="animscape-keyframe-2">
+    <rect
+       style="fill:url(#linearGradient3);stroke-width:0.264583"
+       id="rect1-copy"
+       width="37.25346"
+       height="35.968861"
+       x="24.150518"
+       y="57.293251"
+       clip-path="url(#clipPath3)"
+       animscape:object-id="object-8"
+       transform="translate(107.13582,-6.679931)" />
+  </g>
+</svg>
