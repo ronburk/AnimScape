@@ -186,13 +186,24 @@ function add_keyframe(svg_text, selected_index) {
     do { layer_id = "animscape-keyframe-" + number++; }
     while (used_ids.has(layer_id));
     copy.setAttribute("id", layer_id);
+    const id_map = new Map();
     copy.querySelectorAll("[id]").forEach(element => {
         const old_id = element.id;
         let new_id = old_id + "-copy";
         let copy_number = 2;
         while (used_ids.has(new_id)) new_id = old_id + "-copy-" + copy_number++;
+        id_map.set(old_id, new_id);
         element.setAttribute("id", new_id);
         used_ids.add(new_id);
+    });
+    copy.querySelectorAll("*").forEach(element => {
+        Array.from(element.attributes).forEach(attribute => {
+            let value = attribute.value.replace(/url\\(#([^)]*)\\)/g,
+                (match, id) => id_map.has(id) ? "url(#" + id_map.get(id) + ")" : match);
+            value = value.replace(/^#(.+)$/, (match, id) =>
+                id_map.has(id) ? "#" + id_map.get(id) : match);
+            if (value !== attribute.value) element.setAttribute(attribute.name, value);
+        });
     });
     copy.setAttributeNS(inkscape_namespace, "inkscape:label", "Keyframe " + (selected_index + 2));
     source.after(copy);
