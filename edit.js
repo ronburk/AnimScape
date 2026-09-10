@@ -32,7 +32,7 @@ function get_svg_delta(svg, event) {
 function move_dragged_element(delta_x, delta_y) {
     drag_state.attributes.forEach(attribute =>
         drag_state.element.setAttribute(attribute.name,
-            String(attribute.value + (attribute.name.startsWith("x") ? delta_x : delta_y)));
+            String(attribute.value + (attribute.name.startsWith("x") ? delta_x : delta_y))));
 }
 
 function find_source_object(layer, object_id, element_id) {
