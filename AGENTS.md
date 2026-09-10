@@ -26,8 +26,85 @@
 - For actual browser rendering and DOM inspection, use the supported supervised preview service. Read the control-browser skill and the Sites environment instructions before doing this.
 - `sites-preview` requires a `package.json` with a `dev` script and serves through the internal URL `http://terminal.local:4173/`. Navigate only to that URL; do not try alternate hosts or ports.
 - This project is a plain static XML/XSLT build, so use an untracked, test-only Node HTTP adapter when browser testing is needed. The adapter should serve only the generated `AnimScape.html`, accept the forwarded `--host`, `--port`, and `--strictPort` arguments, and return 404 for other paths. Do not add the adapter or `package.json` to the project unless explicitly requested.
-- Start with `sites-preview start "\$PWD"`, inspect the page in the cloud browser, then run `sites-preview stop`. A successful basic check should verify the title, visible status text, DOM state, console errors, and a screenshot when visual inspection is requested.
+- Start with `sites-preview start "$PWD"`, inspect the page in the cloud browser, then run `sites-preview stop`. A successful basic check should verify the title, visible Open button, DOM state, console errors, and a screenshot when visual inspection is requested.
 - Ignore unrelated console errors originating from the browser-control extension itself; distinguish them from errors whose URL is the AnimScape page.
+
+### Minimal preview adapter
+
+The following setup was used successfully with the managed Linux cloud browser. Keep these two files untracked in the AnimScape checkout and reuse them if present. They use Node's built-in modules; no `npm install` is needed.
+
+`package.json`:
+
+```json
+{
+    "private": true,
+    "scripts": {
+        "dev": "node preview-server.mjs"
+    }
+}
+```
+
+`preview-server.mjs`:
+
+```js
+// Temporary cloud-browser adapter; excluded from the production build.
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+
+let host = '0.0.0.0';
+let port = 4173;
+const args = process.argv.slice(2);
+for (let i = 0; i < args.length; ++i) {
+    if (args[i] === '--host') host = args[++i];
+    else if (args[i] === '--port') port = Number(args[++i]);
+    else if (args[i] !== '--strictPort') throw new Error('Unknown argument: ' + args[i]);
+}
+
+createServer(async (request, response) => {
+    const path = new URL(request.url, 'http://localhost').pathname;
+    if (path !== '/' && path !== '/AnimScape.html') {
+        response.writeHead(404).end();
+        return;
+    }
+    try {
+        const html = await readFile(new URL('./AnimScape.html', import.meta.url));
+        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+        response.end(html);
+    } catch (error) {
+        console.error(error);
+        response.writeHead(500).end('Unable to read AnimScape.html');
+    }
+}).listen(port, host, () => console.log('AnimScape preview ready'));
+```
+
+Follow the Sites skill's execution-profile setup first. For this plain XML/XSLT project, `configured: false` is expected; preserve its existing build rather than initializing a Sites starter.
+
+From the checkout, start the supervised server:
+
+```sh
+sites-preview start "$PWD"
+```
+
+In the browser session initialized by the control-browser skill, use the supported browser API:
+
+```js
+const tab = await browser.tabs.new();
+await tab.goto("http://terminal.local:4173/");
+nodeRepl.write({
+    title: await tab.title(),
+    dom: await tab.playwright.domSnapshot(),
+    logs: await tab.dev.logs({ levels: ["error", "warn"], limit: 20 })
+});
+await nodeRepl.emitImage(await tab.screenshot());
+```
+
+The initial page should have the title `AnimScape`, a visible `Open` button, and an empty SVG viewer. Keyframe controls remain hidden until an SVG is loaded. This checks page loading and inspection; it does not exercise file opening, saving, or playback. The static adapter serves the generated HTML unchanged; the file-I/O replacement described below is needed when testing SVG uploads and edits.
+
+After inspection, stop the preview:
+
+```sh
+sites-preview stop
+```
 
 ### Testing file I/O without the native picker
 
