@@ -90,6 +90,7 @@ function select_keyframe(index) {
     playback.transition_start = null;
     playback.last_now = null;
     refresh_keyframe_ui();
+    keyframe_list.children[keyframe_ui.selected_index].focus();
 }
 
 function change_duration() {
@@ -186,3 +187,24 @@ previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_in
 next_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index + 1);
 play_button.onclick = toggle_playback;
 duration_input.oninput = change_duration;
+
+document.addEventListener("keydown", event => {
+    if (event.target === duration_input || event.target.matches("input, textarea, select")) return;
+    if (!svg_document || keyframe_ui.layers.length === 0) return;
+    if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        select_keyframe(keyframe_ui.selected_index - 1);
+    } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        select_keyframe(keyframe_ui.selected_index + 1);
+    } else if (event.code === "Space") {
+        event.preventDefault();
+        toggle_playback();
+    } else if (event.key === "Delete") {
+        event.preventDefault();
+        remove_keyframe();
+    } else if (event.ctrlKey && event.key.toLowerCase() === "d") {
+        event.preventDefault();
+        create_keyframe();
+    }
+});

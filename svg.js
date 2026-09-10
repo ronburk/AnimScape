@@ -142,8 +142,8 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         button.className = "keyframe-thumbnail" + (index === selected_index ? " selected" : "");
         const copy = svg_document.documentElement.cloneNode(true);
         hide_other_layers(copy, index);
-        copy.setAttribute("width", "120");
-        copy.setAttribute("height", "75");
+        copy.setAttribute("width", "60");
+        copy.setAttribute("height", "38");
         copy.setAttribute("preserveAspectRatio", "xMidYMid meet");
         button.append(document.importNode(copy, true));
         const label = document.createElement("span");
