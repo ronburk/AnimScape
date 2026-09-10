@@ -34,5 +34,6 @@
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="svg.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
+        <script type="text/javascript"><xi:include href="edit.js" parse="text"/></script>
     </body>
 </html>
