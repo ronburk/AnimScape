@@ -100,3 +100,84 @@ document.getElementById("svg-viewer").addEventListener("pointerdown", start_drag
 document.getElementById("svg-viewer").addEventListener("pointermove", continue_drag);
 document.getElementById("svg-viewer").addEventListener("pointerup", finish_drag);
 document.getElementById("svg-viewer").addEventListener("pointercancel", finish_drag);
+
+let title_hold = null;
+let suppress_title_click = false;
+
+function cancel_title_hold() {
+    if (title_hold) clearTimeout(title_hold.timer);
+    title_hold = null;
+}
+
+function edit_keyframe_title(index) {
+    select_keyframe(index);
+    const label = keyframe_list.children[index].querySelector(".keyframe-thumbnail-label");
+    const rect = label.getBoundingClientRect();
+    const input = document.createElement("input");
+    input.className = "keyframe-title-input";
+    input.setAttribute("aria-label", "Keyframe title");
+    input.value = label.textContent;
+    const width = Math.min(180, document.documentElement.clientWidth);
+    input.style.width = width + "px";
+    input.style.left = Math.max(0, Math.min(rect.left, document.documentElement.clientWidth - width)) + "px";
+    input.style.top = rect.top + "px";
+    let finished = false;
+    function finish(commit, focus) {
+        if (finished) return;
+        finished = true;
+        const value = input.value.trim();
+        if (commit && value && value !== label.textContent) {
+            svg_document.text = rename_keyframe(svg_document.text, index, value);
+            // Updating the title alone preserves the target of an outside click.
+            label.textContent = value;
+            keyframe_ui.layers = get_keyframe_layers(parse_svg(svg_document.text));
+        }
+        input.remove();
+        if (focus) keyframe_list.children[index].focus();
+    }
+    input.addEventListener("blur", () => finish(true, false));
+    input.addEventListener("keydown", event => {
+        if (event.isComposing) return;
+        if (event.key === "Enter" || event.key === "Escape") {
+            event.preventDefault();
+            finish(event.key === "Enter", true);
+        }
+    });
+    document.body.append(input);
+    input.focus();
+    input.select();
+}
+
+document.addEventListener("pointerdown", event => {
+    cancel_title_hold();
+    suppress_title_click = false;
+    const label = event.target.closest(".keyframe-thumbnail-label");
+    if (!label || event.button !== 0 || !event.isPrimary) return;
+    const index = Number(label.closest(".keyframe-thumbnail").dataset.keyframeIndex);
+    title_hold = {
+        pointer_id: event.pointerId, x: event.clientX, y: event.clientY,
+        timer: setTimeout(() => {
+            cancel_title_hold();
+            if (!label.isConnected) return;
+            suppress_title_click = true;
+            edit_keyframe_title(index);
+        }, 500)
+    };
+    // Avoid native text selection during the hold; short clicks still select the frame.
+    event.preventDefault();
+});
+document.addEventListener("pointermove", event => {
+    if (title_hold && event.pointerId === title_hold.pointer_id &&
+        Math.hypot(event.clientX - title_hold.x, event.clientY - title_hold.y) > 5)
+        cancel_title_hold();
+});
+document.addEventListener("pointerup", cancel_title_hold);
+document.addEventListener("pointercancel", cancel_title_hold);
+window.addEventListener("blur", cancel_title_hold);
+document.addEventListener("scroll", cancel_title_hold, true);
+document.addEventListener("click", event => {
+    if (!suppress_title_click) return;
+    suppress_title_click = false;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+}, true);

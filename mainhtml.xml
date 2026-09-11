@@ -11,6 +11,7 @@
         .keyframe-thumbnail.selected::before { content: ""; position: absolute; top: -12px; left: 50%; border: 6px solid transparent; border-top: 0; border-bottom-color: #06c; transform: translateX(-50%); }
         .keyframe-thumbnail svg { display: block; width: 60px; height: 38px; }
         .keyframe-thumbnail-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .keyframe-title-input { position: fixed; z-index: 1; box-sizing: border-box; font: 14px sans-serif; padding: 2px; }
         .keyframe-thumbnail-duration { display: block; color: #666; font-size: 12px; margin-top: 3px; }
         #keyframe-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         #keyframe-controls label { margin-left: 8px; }
