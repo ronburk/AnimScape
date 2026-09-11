@@ -6,7 +6,8 @@ const drag_state = {
     delta_y: 0,
     object_id: null,
     element_id: null,
-    attributes: null
+    attributes: null,
+    original_transform: ""
 };
 
 function is_horizontal_drag_attribute(name) {
@@ -34,9 +35,10 @@ function get_svg_delta(svg, event) {
 }
 
 function move_dragged_element(delta_x, delta_y) {
-    drag_state.attributes.forEach(attribute =>
-        drag_state.element.setAttribute(attribute.name,
-            String(attribute.value + (is_horizontal_drag_attribute(attribute.name) ? delta_x : delta_y))));
+    const transform = delta_x === 0 && delta_y === 0 ? drag_state.original_transform :
+        "translate(" + delta_x + " " + delta_y + ")" +
+        (drag_state.original_transform ? " " + drag_state.original_transform : "");
+    drag_state.element.setAttribute("transform", transform);
 }
 
 function find_source_object(layer, object_id, element_id) {
@@ -51,10 +53,11 @@ function commit_drag() {
     const layer = get_keyframe_layers(parsed)[keyframe_ui.selected_index];
     const source = find_source_object(layer, drag_state.object_id, drag_state.element_id);
     if (!source) return;
-    drag_state.attributes.forEach(attribute =>
-        source.setAttribute(attribute.name,
-            String(attribute.value + (is_horizontal_drag_attribute(attribute.name)
-                ? drag_state.delta_x : drag_state.delta_y))));
+    const transform = drag_state.delta_x === 0 && drag_state.delta_y === 0
+        ? drag_state.original_transform
+        : "translate(" + drag_state.delta_x + " " + drag_state.delta_y + ")" +
+            (drag_state.original_transform ? " " + drag_state.original_transform : "");
+    source.setAttribute("transform", transform);
     svg_document.text = new XMLSerializer().serializeToString(parsed);
     void history_record("Move object", svg_document.text);
 }
@@ -84,6 +87,7 @@ function start_drag(event) {
     drag_state.object_id = get_animscape_object_id(element);
     drag_state.element_id = element.id;
     drag_state.attributes = attributes;
+    drag_state.original_transform = element.getAttribute("transform") || "";
     element.setPointerCapture?.(event.pointerId);
     event.preventDefault();
 }
