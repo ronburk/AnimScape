@@ -159,6 +159,16 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
     });
 }
 
+function next_keyframe_label(layers) {
+    let number = 0;
+    layers.forEach(layer => {
+        const match = /^Keyframe ([0-9]+)$/.exec(
+            layer.getAttributeNS(inkscape_namespace, "label") || "");
+        if (match) number = Math.max(number, Number(match[1]));
+    });
+    return "Keyframe " + (number + 1);
+}
+
 function draw_svg(svg_text) {
     const parsed = parse_svg(svg_text);
     document.getElementById("svg-viewer").replaceChildren(document.importNode(parsed.documentElement, true));
@@ -209,7 +219,7 @@ function add_keyframe(svg_text, selected_index) {
             if (value !== attribute.value) element.setAttribute(attribute.name, value);
         });
     });
-    copy.setAttributeNS(inkscape_namespace, "inkscape:label", "Keyframe " + (selected_index + 2));
+    copy.setAttributeNS(inkscape_namespace, "inkscape:label", next_keyframe_label(layers));
     source.after(copy);
     return new XMLSerializer().serializeToString(parsed);
 }
