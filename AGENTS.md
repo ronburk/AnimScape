@@ -31,6 +31,22 @@
 - Ignore unrelated console errors originating from the browser-control extension itself; distinguish them from errors whose URL is the AnimScape page.
 - Do not attempt `data:`, `file:`, loopback, raw GitHub, or other alternate URLs as a workaround. The supported preview URL is the only browser target.
 
+### Browser bootstrap and recovery
+
+- Use the `control-browser` skill before any cloud-browser interaction. Read it completely, then read the browser client's complete documentation before creating a tab.
+- Obtain the browser client's absolute path from the `skill_root` returned by `skills.read` for the browser skill. Import `scripts/browser-client.mjs` from that returned root; never guess a workspace-relative path or import it by package name.
+- In one persistent browser session, run this setup once and reuse the resulting `browser` binding:
+
+  ```js
+  const { setupBrowserRuntime } = await import("<skill_root>/scripts/browser-client.mjs");
+  const agent = await setupBrowserRuntime({ environment: "cloud" });
+  const browser = await agent.browsers.get("cdp");
+  nodeRepl.write(await browser.documentation());
+  ```
+
+- If the import fails, stop and correct the absolute skill path. If browser selection or interaction fails after setup, read the browser skill's `bootstrap-troubleshooting` or `browser-troubleshooting` documentation as appropriate before resetting the browser session or trying another mechanism. Do not fall back to standalone Playwright, Computer Use, or a guessed browser endpoint.
+- Keep the preview process running while the browser is being inspected. Stop it only after collecting the final DOM, page-originated logs, and any requested screenshot.
+
 ### Preview adapter
 
 The versioned adapter consists of these files:
