@@ -1,5 +1,4 @@
 const svg_file_button = document.getElementById("svg-file-button");
-const add_keyframe_button = document.getElementById("add-keyframe-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
 const file_controls = document.getElementById("file-controls");
@@ -9,6 +8,8 @@ const previous_keyframe_button = document.getElementById("previous-keyframe-butt
 const play_button = document.getElementById("play-button");
 const next_keyframe_button = document.getElementById("next-keyframe-button");
 const duration_input = document.getElementById("duration-input");
+const timeline_viewport = document.getElementById("timeline-viewport");
+const timeline_scale = 20;
 let svg_document = null;
 const keyframe_ui = { layers: [], selected_index: 0 };
 const playback = {
@@ -150,13 +151,17 @@ async function save_svg_file() {
     catch (error) { console.error("Save failed: " + error.message); }
 }
 
-function create_keyframe() {
+function create_keyframe_at_time(time) {
     stop_playback();
     const old_text = svg_document.text;
-    const old_index = keyframe_ui.selected_index;
     try {
-        svg_document.text = add_keyframe(old_text, old_index);
-        keyframe_ui.selected_index = old_index + 1;
+        const result = add_keyframe_at_time(old_text, time);
+        if (result.existing_index !== undefined) {
+            keyframe_ui.selected_index = result.existing_index;
+        } else {
+            svg_document.text = result.text;
+            keyframe_ui.selected_index = result.index;
+        }
         refresh_keyframe_ui();
     } catch (error) {
         svg_document.text = old_text;
@@ -181,12 +186,17 @@ function remove_keyframe() {
 }
 
 svg_file_button.onclick = open_svg_file;
-add_keyframe_button.onclick = create_keyframe;
 delete_keyframe_button.onclick = remove_keyframe;
 previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index - 1);
 next_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index + 1);
 play_button.onclick = toggle_playback;
 duration_input.oninput = change_duration;
+keyframe_list.onclick = event => {
+    if (event.target.closest(".keyframe-thumbnail")) return;
+    const time = Math.max(0, (event.offsetX + timeline_viewport.scrollLeft) / timeline_scale);
+    if (event.target === keyframe_list || event.target.closest(".timeline-axis"))
+        create_keyframe_at_time(time);
+};
 
 document.addEventListener("keydown", event => {
     if (event.target === duration_input || event.target.matches("input, textarea, select")) return;
@@ -203,8 +213,5 @@ document.addEventListener("keydown", event => {
     } else if (event.key === "Delete") {
         event.preventDefault();
         remove_keyframe();
-    } else if (event.ctrlKey && event.key.toLowerCase() === "d") {
-        event.preventDefault();
-        create_keyframe();
     }
 });
