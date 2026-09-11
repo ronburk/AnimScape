@@ -1,5 +1,17 @@
 # Agent instructions
 
+## Bootstrap before reading this file
+
+- These instructions may be unavailable at the beginning of a task because the working directory may be empty or may not be an AnimScape checkout. Do not stop because `AGENTS.md` is not present locally.
+- First inspect the current directory and its parents for an existing checkout. If there is no usable checkout, create one immediately in the workspace with:
+
+  ```sh
+  git clone https://github.com/ronburk/AnimScape.git AnimScape
+  cd AnimScape
+  ```
+
+- Then read this `AGENTS.md` from the checkout and follow the remaining instructions. If the checkout is not clean, preserve unrelated user changes and use a separate fresh checkout for testing.
+
 - The repository is public. For a fresh checkout, run `git clone https://github.com/ronburk/AnimScape.git`. No GitHub credentials or special reconstruction procedure is needed.
 - To update an existing clean checkout of `main`, run `git pull --ff-only`.
 - Use the GitHub connector for remote writes, including branches, commits, pull requests, and merges. Local Git commands are available for checkout and inspection.
@@ -49,7 +61,8 @@
 - If the import fails, stop and correct the absolute skill path. If browser selection or interaction fails after setup, read the browser skill's `bootstrap-troubleshooting` or `browser-troubleshooting` documentation as appropriate before resetting the JavaScript session or trying another mechanism. Do not fall back to standalone Playwright, Computer Use, or a guessed browser endpoint.
 - For a fresh browser session and a fresh isolated preview, create a tab with `browser.tabs.new()` and navigate it to `http://terminal.local:4173/`. This is the preferred workflow and supports repeated independent builds by restarting the isolated preview setup.
 - If working in an already-used browser session, first inspect `browser.tabs.list()`. An existing `about:blank` tab may be used once, but do not assume that a new tab or reload will work after a preview tab has failed. A session can retain stale preview and `chrome-error://chromewebdata/` tabs from an earlier attempt.
-- Treat `ERR_BLOCKED_BY_CLIENT`, Cloud Browser URL-policy rejection on reload, or failure of a newly created tab after the fresh isolated setup as a browser-session problem, not an AnimScape application error. Do not loop on retries or alternate URLs. Stop the preview, create a fresh isolated checkout/setup, and start a new chat if the browser remains unable to load the supported URL. Resetting the JavaScript session alone does not restart Chrome.
+- Treat `ERR_BLOCKED_BY_CLIENT`, Cloud Browser URL-policy rejection on reload, or failure of a newly created tab as a browser-session or preview-state problem, not an AnimScape application error. Do not loop on retries or alternate URLs. Stop the preview, create a fresh isolated checkout/setup, rebuild, copy the new HTML into `agent-files`, and restart `sites-preview`; then try `browser.tabs.new()` again in the same chat. This recovery has been verified to work even when the browser contains stale preview and error tabs. Resetting the JavaScript session alone is insufficient, but a new chat is not normally required.
+- Only after the complete fresh-preview recovery sequence itself fails should the browser be reported as unavailable; record the exact failing step and error instead of concluding that browser testing is impossible.
 - Keep the preview process running while the browser is being inspected. Stop it only after collecting the final DOM, page-originated logs, and any requested screenshot.
 
 ### Preview adapter
