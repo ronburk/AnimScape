@@ -169,6 +169,12 @@ function next_keyframe_label(layers) {
     return "Keyframe " + (number + 1);
 }
 
+function rename_keyframe(svg_text, index, label) {
+    const parsed = parse_svg(svg_text);
+    get_keyframe_layers(parsed)[index].setAttributeNS(inkscape_namespace, "inkscape:label", label);
+    return new XMLSerializer().serializeToString(parsed);
+}
+
 function draw_svg(svg_text) {
     const parsed = parse_svg(svg_text);
     document.getElementById("svg-viewer").replaceChildren(document.importNode(parsed.documentElement, true));
