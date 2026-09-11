@@ -134,14 +134,17 @@ function show_keyframe_transition(svg_document, current_index, next_index, progr
 
 function render_keyframe_thumbnails(svg_document, selected_index) {
     const layers = get_keyframe_layers(svg_document);
-    const positions = [];
+    const times = [];
     let time = 0;
     layers.forEach((layer, index) => {
-        positions.push(time);
+        times.push(time);
         if (index + 1 < layers.length) time += get_keyframe_duration(layer);
     });
     const total_time = Math.max(time, 1);
-    keyframe_list.replaceChildren();
+    timeline_track.replaceChildren();
+    timeline_track.style.position = "relative";
+    timeline_track.style.height = "42px";
+    timeline_track.style.width = total_time * timeline_scale + "px";
     const axis = document.createElement("div");
     axis.className = "timeline-axis";
     axis.style.width = total_time * timeline_scale + "px";
@@ -152,13 +155,25 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         mark.textContent = tick + "s";
         axis.append(mark);
     }
-    keyframe_list.style.width = Math.max(total_time * timeline_scale, keyframe_list.parentElement.clientWidth) + "px";
-    keyframe_list.append(axis);
+    timeline_track.append(axis);
+    layers.forEach((layer, index) => {
+        const marker = document.createElement("button");
+        marker.type = "button";
+        marker.className = "timeline-marker" + (index === selected_index ? " selected" : "");
+        marker.style.left = times[index] * timeline_scale + "px";
+        marker.title = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
+        marker.onclick = event => { event.stopPropagation(); select_keyframe(index); };
+        timeline_track.append(marker);
+    });
+    timeline_content.style.width = Math.max(total_time * timeline_scale, timeline_viewport.clientWidth) + "px";
+    keyframe_list.replaceChildren(document.getElementById("gallery-playhead"));
+    const gallery_width = Math.max(layers.length * gallery_card_step, gallery_viewport.clientWidth);
+    keyframe_list.style.width = gallery_width + "px";
     layers.forEach((layer, index) => {
         const button = document.createElement("button");
         button.type = "button";
         button.dataset.keyframeIndex = index;
-        button.style.left = positions[index] * timeline_scale + "px";
+        button.style.left = (index * gallery_card_step + gallery_card_step / 2) + "px";
         button.className = "keyframe-thumbnail" + (index === selected_index ? " selected" : "");
         const copy = svg_document.documentElement.cloneNode(true);
         hide_other_layers(copy, index);
@@ -177,6 +192,21 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         button.onclick = () => select_keyframe(index);
         keyframe_list.append(button);
     });
+    render_playheads(times[selected_index]);
+}
+
+function render_playheads(time) {
+    if (!keyframe_ui || keyframe_ui.layers.length === 0) return;
+    const times = [];
+    let elapsed = 0;
+    keyframe_ui.layers.forEach((layer, index) => {
+        times.push(elapsed);
+        if (index + 1 < keyframe_ui.layers.length) elapsed += get_keyframe_duration(layer);
+    });
+    const selected = keyframe_ui.selected_index;
+    document.getElementById("timeline-playhead").style.left = time * timeline_scale + "px";
+    document.getElementById("gallery-playhead").style.left =
+        (selected * gallery_card_step + gallery_card_step / 2) + "px";
 }
 
 function ensure_animscape_object_ids(svg) {
