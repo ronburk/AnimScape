@@ -47,9 +47,9 @@
   ```
 
 - If the import fails, stop and correct the absolute skill path. If browser selection or interaction fails after setup, read the browser skill's `bootstrap-troubleshooting` or `browser-troubleshooting` documentation as appropriate before resetting the JavaScript session or trying another mechanism. Do not fall back to standalone Playwright, Computer Use, or a guessed browser endpoint.
-- Use the browser's original pre-existing `about:blank` tab for the preview. Find it with `browser.tabs.list()` before navigation and call `goto()` on that tab. Do not use `browser.tabs.new()` for this URL: newly created tabs may be rejected with `ERR_BLOCKED_BY_CLIENT`.
-- A preview tab is single-use for testing. Do not reload it or navigate it again; start the preview before consuming the blank tab and collect all required DOM, log, and screenshot checks during that one load.
-- The browser is no longer usable for preview testing when `browser.tabs.list()` contains no `about:blank` tab and every available tab is a preview page or `chrome-error://chromewebdata/`, especially after a new-tab navigation reports `ERR_BLOCKED_BY_CLIENT` or reload reports a Cloud Browser URL-policy rejection. Resetting the JavaScript session does not restore the blank tab. Since the browser API exposes no Chrome restart, stop the test and start a new chat to obtain a fresh browser instance.
+- For a fresh browser session and a fresh isolated preview, create a tab with `browser.tabs.new()` and navigate it to `http://terminal.local:4173/`. This is the preferred workflow and supports repeated independent builds by restarting the isolated preview setup.
+- If working in an already-used browser session, first inspect `browser.tabs.list()`. An existing `about:blank` tab may be used once, but do not assume that a new tab or reload will work after a preview tab has failed. A session can retain stale preview and `chrome-error://chromewebdata/` tabs from an earlier attempt.
+- Treat `ERR_BLOCKED_BY_CLIENT`, Cloud Browser URL-policy rejection on reload, or failure of a newly created tab after the fresh isolated setup as a browser-session problem, not an AnimScape application error. Do not loop on retries or alternate URLs. Stop the preview, create a fresh isolated checkout/setup, and start a new chat if the browser remains unable to load the supported URL. Resetting the JavaScript session alone does not restart Chrome.
 - Keep the preview process running while the browser is being inspected. Stop it only after collecting the final DOM, page-originated logs, and any requested screenshot.
 
 ### Preview adapter
@@ -111,10 +111,7 @@ sites-preview start "$PWD/agent-files"
 In the browser session initialized by the control-browser skill, use the supported browser API:
 
 ```js
-const tab_info = (await browser.tabs.list())
-    .find(info => info.url === "about:blank");
-if (!tab_info) throw new Error("No original about:blank tab is available; start a new chat.");
-const tab = await browser.tabs.get(tab_info.id);
+const tab = await browser.tabs.new();
 await tab.goto("http://terminal.local:4173/");
 nodeRepl.write({
     title: await tab.title(),
