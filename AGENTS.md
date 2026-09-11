@@ -46,7 +46,10 @@
   nodeRepl.write(await browser.documentation());
   ```
 
-- If the import fails, stop and correct the absolute skill path. If browser selection or interaction fails after setup, read the browser skill's `bootstrap-troubleshooting` or `browser-troubleshooting` documentation as appropriate before resetting the browser session or trying another mechanism. Do not fall back to standalone Playwright, Computer Use, or a guessed browser endpoint.
+- If the import fails, stop and correct the absolute skill path. If browser selection or interaction fails after setup, read the browser skill's `bootstrap-troubleshooting` or `browser-troubleshooting` documentation as appropriate before resetting the JavaScript session or trying another mechanism. Do not fall back to standalone Playwright, Computer Use, or a guessed browser endpoint.
+- Use the browser's original pre-existing `about:blank` tab for the preview. Find it with `browser.tabs.list()` before navigation and call `goto()` on that tab. Do not use `browser.tabs.new()` for this URL: newly created tabs may be rejected with `ERR_BLOCKED_BY_CLIENT`.
+- A preview tab is single-use for testing. Do not reload it or navigate it again; start the preview before consuming the blank tab and collect all required DOM, log, and screenshot checks during that one load.
+- The browser is no longer usable for preview testing when `browser.tabs.list()` contains no `about:blank` tab and every available tab is a preview page or `chrome-error://chromewebdata/`, especially after a new-tab navigation reports `ERR_BLOCKED_BY_CLIENT` or reload reports a Cloud Browser URL-policy rejection. Resetting the JavaScript session does not restore the blank tab. Since the browser API exposes no Chrome restart, stop the test and start a new chat to obtain a fresh browser instance.
 - Keep the preview process running while the browser is being inspected. Stop it only after collecting the final DOM, page-originated logs, and any requested screenshot.
 
 ### Preview adapter
@@ -108,7 +111,10 @@ sites-preview start "$PWD/agent-files"
 In the browser session initialized by the control-browser skill, use the supported browser API:
 
 ```js
-const tab = await browser.tabs.new();
+const tab_info = (await browser.tabs.list())
+    .find(info => info.url === "about:blank");
+if (!tab_info) throw new Error("No original about:blank tab is available; start a new chat.");
+const tab = await browser.tabs.get(tab_info.id);
 await tab.goto("http://terminal.local:4173/");
 nodeRepl.write({
     title: await tab.title(),
