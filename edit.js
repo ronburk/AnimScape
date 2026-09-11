@@ -111,7 +111,8 @@ function cancel_title_hold() {
 
 function edit_keyframe_title(index) {
     select_keyframe(index);
-    const label = keyframe_list.children[index].querySelector(".keyframe-thumbnail-label");
+    const card = keyframe_list.querySelectorAll(".keyframe-thumbnail")[index];
+    const label = card.querySelector(".keyframe-thumbnail-label");
     const rect = label.getBoundingClientRect();
     const input = document.createElement("input");
     input.className = "keyframe-title-input";
@@ -133,7 +134,7 @@ function edit_keyframe_title(index) {
             keyframe_ui.layers = get_keyframe_layers(parse_svg(svg_document.text));
         }
         input.remove();
-        if (focus) keyframe_list.children[index].focus();
+        if (focus) card.focus();
     }
     input.addEventListener("blur", () => finish(true, false));
     input.addEventListener("keydown", event => {

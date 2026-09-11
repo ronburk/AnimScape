@@ -9,7 +9,11 @@ const play_button = document.getElementById("play-button");
 const next_keyframe_button = document.getElementById("next-keyframe-button");
 const duration_input = document.getElementById("duration-input");
 const timeline_viewport = document.getElementById("timeline-viewport");
+const timeline_content = document.getElementById("timeline-content");
+const timeline_track = document.getElementById("timeline-track");
+const gallery_viewport = document.getElementById("gallery-viewport");
 const timeline_scale = 20;
+const gallery_card_step = 100;
 let svg_document = null;
 const keyframe_ui = { layers: [], selected_index: 0 };
 const playback = {
@@ -91,7 +95,7 @@ function select_keyframe(index) {
     playback.transition_start = null;
     playback.last_now = null;
     refresh_keyframe_ui();
-    keyframe_list.children[keyframe_ui.selected_index].focus();
+    keyframe_list.querySelectorAll(".keyframe-thumbnail")[keyframe_ui.selected_index].focus();
 }
 
 function change_duration() {
@@ -165,7 +169,6 @@ function create_keyframe_at_time(time) {
         refresh_keyframe_ui();
     } catch (error) {
         svg_document.text = old_text;
-        keyframe_ui.selected_index = old_index;
         console.error("Add keyframe failed: " + error.message);
     }
 }
@@ -191,11 +194,9 @@ previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_in
 next_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index + 1);
 play_button.onclick = toggle_playback;
 duration_input.oninput = change_duration;
-keyframe_list.onclick = event => {
-    if (event.target.closest(".keyframe-thumbnail")) return;
+timeline_track.onclick = event => {
     const time = Math.max(0, (event.offsetX + timeline_viewport.scrollLeft) / timeline_scale);
-    if (event.target === keyframe_list || event.target.closest(".timeline-axis"))
-        create_keyframe_at_time(time);
+    create_keyframe_at_time(time);
 };
 
 document.addEventListener("keydown", event => {
