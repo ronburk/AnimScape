@@ -109,6 +109,7 @@ function change_duration() {
     const parsed = parse_svg(svg_document.text);
     set_keyframe_duration(get_keyframe_layers(parsed)[keyframe_ui.selected_index], duration);
     svg_document.text = new XMLSerializer().serializeToString(parsed);
+    void history_record("Change keyframe duration", svg_document.text);
     refresh_keyframe_ui();
 }
 
@@ -135,6 +136,7 @@ async function open_svg_file() {
     try {
         const opened = await file_io.open_svg();
         svg_document = opened;
+        await history_open(opened);
         keyframe_ui.selected_index = 0;
         refresh_keyframe_ui();
         svg_file_button.textContent = "Save";
@@ -164,6 +166,7 @@ function create_keyframe_at_time(time) {
             keyframe_ui.selected_index = result.existing_index;
         } else {
             svg_document.text = result.text;
+            void history_record("Add keyframe", svg_document.text);
             keyframe_ui.selected_index = result.index;
         }
         refresh_keyframe_ui();
@@ -179,6 +182,7 @@ function remove_keyframe() {
     const old_index = keyframe_ui.selected_index;
     try {
         svg_document.text = delete_keyframe(old_text, old_index);
+        void history_record("Delete keyframe", svg_document.text);
         keyframe_ui.selected_index = Math.max(0, old_index - 1);
         refresh_keyframe_ui();
     } catch (error) {
