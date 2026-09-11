@@ -9,6 +9,10 @@ const drag_state = {
     attributes: null
 };
 
+function is_horizontal_drag_attribute(name) {
+    return name === "x" || name === "x1" || name === "x2" || name === "cx";
+}
+
 function get_drag_attributes(element) {
     const names = element.localName === "ellipse" || element.localName === "circle"
         ? ["cx", "cy"]
@@ -32,7 +36,7 @@ function get_svg_delta(svg, event) {
 function move_dragged_element(delta_x, delta_y) {
     drag_state.attributes.forEach(attribute =>
         drag_state.element.setAttribute(attribute.name,
-            String(attribute.value + (attribute.name.startsWith("x") ? delta_x : delta_y))));
+            String(attribute.value + (is_horizontal_drag_attribute(attribute.name) ? delta_x : delta_y))));
 }
 
 function find_source_object(layer, object_id, element_id) {
@@ -49,7 +53,7 @@ function commit_drag() {
     if (!source) return;
     drag_state.attributes.forEach(attribute =>
         source.setAttribute(attribute.name,
-            String(attribute.value + (attribute.name.startsWith("x")
+            String(attribute.value + (is_horizontal_drag_attribute(attribute.name)
                 ? drag_state.delta_x : drag_state.delta_y))));
     svg_document.text = new XMLSerializer().serializeToString(parsed);
 }
