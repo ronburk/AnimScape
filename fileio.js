@@ -140,11 +140,9 @@ async function save_svg(document, edited_text) {
 }
 
 async function create_webm(filename) {
-    if (typeof window.showSaveFilePicker !== "function")
-        throw new Error("This browser cannot save WebM video files.");
-    const file_handle = await window.showSaveFilePicker({
-        suggestedName: filename,
-        types: [{description: "WebM video", accept: {"video/webm": [".webm"]}}]
+    await choose_workspace();
+    const file_handle = await workspace_handle.getFileHandle(filename, {
+        create: true
     });
     const writable = await file_handle.createWritable();
     return {
