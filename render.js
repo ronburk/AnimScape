@@ -112,12 +112,25 @@ async function render_webm(svg_text, settings_overrides = {}, callbacks = {}) {
         videoBitsPerSecond: settings.video_bits_per_second
     });
     const chunks = [];
+    let chunk_write_tail = Promise.resolve();
     const recording_finished = new Promise((resolve, reject) => {
         recorder.ondataavailable = event => {
-            if (event.data.size > 0) chunks.push(event.data);
+            if (event.data.size === 0) return;
+            if (callbacks.on_chunk) {
+                chunk_write_tail = chunk_write_tail.then(() => callbacks.on_chunk(event.data));
+            } else {
+                chunks.push(event.data);
+            }
         };
         recorder.onerror = () => reject(recorder.error || new Error("WebM recording failed."));
-        recorder.onstop = () => resolve(new Blob(chunks, {type: recorder.mimeType}));
+        recorder.onstop = async () => {
+            try {
+                await chunk_write_tail;
+                resolve(callbacks.on_chunk ? null : new Blob(chunks, {type: recorder.mimeType}));
+            } catch (error) {
+                reject(error);
+            }
+        };
     });
 
     try {
@@ -135,6 +148,8 @@ async function render_webm(svg_text, settings_overrides = {}, callbacks = {}) {
             if (frame + 1 < frame_count) await wait_for_frame(1000 / settings.fps);
         }
         await wait_for_frame(1000 / settings.fps);
+        recorder.requestData();
+        await wait_for_frame(10);
         recorder.stop();
         return await recording_finished;
     } catch (error) {
@@ -148,13 +163,16 @@ async function render_webm(svg_text, settings_overrides = {}, callbacks = {}) {
 
 async function export_webm(settings_overrides = {}, callbacks = {}) {
     const settings = get_webm_render_settings(settings_overrides);
-    const blob = await render_webm(new XMLSerializer().serializeToString(get_export_svg()), settings, callbacks);
-    const download_url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = download_url;
-    link.download = settings.filename;
-    link.click();
-    URL.revokeObjectURL(download_url);
+    if (!file_io.create_webm) throw new Error("This browser cannot save WebM video files.");
+    const output = await file_io.create_webm(settings.filename);
+    try {
+        await render_webm(new XMLSerializer().serializeToString(get_export_svg()), settings,
+            Object.assign({}, callbacks, {on_chunk: chunk => output.write(chunk)}));
+        await output.close();
+    } catch (error) {
+        await output.abort();
+        throw error;
+    }
 }
 
 async function export_png() {
