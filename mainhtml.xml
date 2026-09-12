@@ -34,6 +34,10 @@
         <div id="svg-viewer"></div>
         <div id="file-controls">
             <button id="svg-file-button" type="button">Open</button>
+            <label id="svg-file-selection" hidden="hidden">SVG file:
+                <select id="svg-file-list"></select>
+            </label>
+            <button id="open-selected-svg-button" type="button" hidden="hidden">Open selected</button>
             <button id="export-png-button" type="button" disabled="disabled">Export PNG</button>
             <button id="export-webm-button" type="button" disabled="disabled">Render WebM</button>
         </div>

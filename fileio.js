@@ -77,19 +77,26 @@ async function choose_workspace() {
     }
 }
 
-async function open_svg() {
+async function list_svg_files() {
     await choose_workspace();
+    const files = [];
+    for await (const entry of workspace_handle.values()) {
+        if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".svg"))
+            files.push(entry);
+    }
+    files.sort((a, b) => a.name.localeCompare(b.name));
+    if (files.length === 0) {
+        const error = new Error("The selected directory contains no SVG files.");
+        error.code = "no-svg-files";
+        throw error;
+    }
+    return files;
+}
 
-    const choices = [{
-        description: "SVG files",
-        accept: {"image/svg+xml": [".svg"]}
-    }];
-    const handles = await window.showOpenFilePicker({
-        multiple: false,
-        types: choices,
-        startIn: workspace_handle
-    });
-    const file_handle = handles[0];
+async function open_svg(file_handle) {
+    if (!file_handle || file_handle.kind !== "file")
+        throw new TypeError("open_svg() requires an SVG file handle.");
+    await choose_workspace();
     const file = await file_handle.getFile();
 
     return {
@@ -153,6 +160,7 @@ async function create_webm(filename) {
 }
 
 window.file_io = Object.freeze({
+    list_svg_files: list_svg_files,
     open_svg: open_svg,
     save_svg: save_svg,
     create_webm: create_webm
