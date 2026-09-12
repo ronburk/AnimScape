@@ -148,13 +148,20 @@ async function open_svg_file() {
         svg_file_button.textContent = "Open";
         svg_file_button.onclick = open_svg_file;
         file_controls.hidden = false;
-        console.error("Open failed: " + error.message);
+        const user_message = error.code === "history-format"
+            ? "The SVG's history file is from an older AnimScape version. Back up and remove the matching .hst file, then try opening the SVG again."
+            : error.message === "The selected file is not valid SVG."
+                ? error.message
+                : "The selected SVG could not be opened.";
+        report_error("Open", user_message, error);
     }
 }
 
 async function save_svg_file() {
     try { await file_io.save_svg(svg_document, svg_document.text); }
-    catch (error) { console.error("Save failed: " + error.message); }
+    catch (error) {
+        report_error("Save", "The SVG could not be saved. Check that it is still accessible and try again.", error);
+    }
 }
 
 function create_keyframe_at_time(time) {
@@ -172,7 +179,7 @@ function create_keyframe_at_time(time) {
         refresh_keyframe_ui();
     } catch (error) {
         svg_document.text = old_text;
-        console.error("Add keyframe failed: " + error.message);
+        report_error("Add keyframe", "The new keyframe could not be added.", error);
     }
 }
 
@@ -188,7 +195,7 @@ function create_keyframe() {
     } catch (error) {
         svg_document.text = old_text;
         keyframe_ui.selected_index = old_index;
-        console.error("Duplicate keyframe failed: " + error.message);
+        report_error("Duplicate keyframe", "The keyframe could not be duplicated.", error);
     }
 }
 
@@ -204,7 +211,7 @@ function remove_keyframe() {
     } catch (error) {
         svg_document.text = old_text;
         keyframe_ui.selected_index = old_index;
-        console.error("Delete keyframe failed: " + error.message);
+        report_error("Delete keyframe", "The keyframe could not be deleted.", error);
     }
 }
 

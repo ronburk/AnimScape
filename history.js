@@ -107,8 +107,11 @@ async function history_scan() {
     const entries = [];
     let offset = history_skip_whitespace(bytes, 0);
     if (offset === bytes.length) return entries;
-    if (bytes[offset] !== 60)
-        throw new Error("The history file is not in the current format.");
+    if (bytes[offset] !== 60) {
+        const error = new Error("The history file is not in the current format.");
+        error.code = "history-format";
+        throw error;
+    }
 
     while (offset < bytes.length) {
         offset = history_skip_whitespace(bytes, offset);
