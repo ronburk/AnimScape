@@ -1,4 +1,5 @@
 const svg_file_button = document.getElementById("svg-file-button");
+const export_png_button = document.getElementById("export-png-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
 const file_controls = document.getElementById("file-controls");
@@ -129,6 +130,8 @@ function refresh_keyframe_ui() {
     delete_keyframe_button.disabled = keyframe_ui.layers.length <= 1;
     keyframe_panel.hidden = false;
     keyframe_controls.append(svg_file_button);
+    keyframe_controls.append(export_png_button);
+    export_png_button.disabled = false;
     file_controls.hidden = true;
 }
 
@@ -145,6 +148,8 @@ async function open_svg_file() {
         svg_document = null;
         keyframe_panel.hidden = true;
         file_controls.append(svg_file_button);
+        file_controls.append(export_png_button);
+        export_png_button.disabled = true;
         svg_file_button.textContent = "Open";
         svg_file_button.onclick = open_svg_file;
         file_controls.hidden = false;
@@ -216,6 +221,12 @@ function remove_keyframe() {
 }
 
 svg_file_button.onclick = open_svg_file;
+export_png_button.onclick = async () => {
+    export_png_button.disabled = true;
+    try { await export_png(); }
+    catch (error) { report_error("Export PNG", "The current image could not be exported as a PNG.", error); }
+    finally { export_png_button.disabled = false; }
+};
 delete_keyframe_button.onclick = remove_keyframe;
 previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index - 1);
 next_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index + 1);

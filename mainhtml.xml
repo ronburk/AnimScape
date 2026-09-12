@@ -33,6 +33,7 @@
         <div id="svg-viewer"></div>
         <div id="file-controls">
             <button id="svg-file-button" type="button">Open</button>
+            <button id="export-png-button" type="button" disabled="disabled">Export PNG</button>
         </div>
         <dialog id="error-dialog" aria-labelledby="error-dialog-title" aria-describedby="error-dialog-message">
             <form method="dialog">
@@ -63,6 +64,7 @@
         </div>
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="svg.js" parse="text"/></script>
+        <script type="text/javascript"><xi:include href="render.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="history.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="error.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
