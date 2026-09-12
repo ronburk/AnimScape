@@ -94,6 +94,7 @@ async function open_svg() {
 
     return {
         file_handle: file_handle,
+        workspace_handle: workspace_handle,
         text: await file.text(),
         state: {
             last_modified: file.lastModified,

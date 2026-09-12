@@ -5,12 +5,21 @@
         #svg-viewer { width: 100%; height: 80vh; background: #f5f5f5; }
         #keyframe-panel { height: 20vh; padding: 8px 12px; box-sizing: border-box; font: 14px sans-serif; }
         #file-controls { height: 20vh; padding: 12px; box-sizing: border-box; }
-        #keyframe-list { display: flex; gap: 6px; overflow-x: auto; height: calc(100% - 40px); padding: 12px 4px 4px; box-sizing: border-box; }
-        .keyframe-thumbnail { position: relative; flex: 0 0 60px; padding: 2px; border: 2px solid transparent; border-radius: 4px; background: white; color: #333; }
+        #timeline-viewport, #gallery-viewport { overflow-x: auto; padding: 6px 4px; box-sizing: border-box; }
+        #timeline-content, #keyframe-list { position: relative; min-width: 100%; }
+        #timeline-content { height: 42px; }
+        #keyframe-list { height: 96px; }
+        .timeline-axis { position: absolute; top: 0; left: 0; height: 28px; border-bottom: 1px solid #999; pointer-events: none; }
+        .timeline-tick { position: absolute; top: 0; height: 28px; border-left: 1px solid #aaa; color: #555; font-size: 11px; padding-left: 3px; box-sizing: border-box; }
+        .timeline-marker { position: absolute; top: 18px; width: 10px; height: 10px; padding: 0; border: 0; background: #777; transform: translate(-50%, -50%) rotate(45deg); cursor: pointer; }
+        .timeline-marker.selected { background: #d33; }
+        .timeline-playhead, .gallery-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #d33; pointer-events: none; z-index: 2; }
+        .keyframe-thumbnail { position: absolute; top: 8px; width: 84px; height: fit-content; padding: 2px; border: 2px solid transparent; border-radius: 4px; background: white; color: #333; transform: translateX(-50%); }
         .keyframe-thumbnail.selected { border-color: #06c; }
         .keyframe-thumbnail.selected::before { content: ""; position: absolute; top: -12px; left: 50%; border: 6px solid transparent; border-top: 0; border-bottom-color: #06c; transform: translateX(-50%); }
         .keyframe-thumbnail svg { display: block; width: 60px; height: 38px; }
         .keyframe-thumbnail-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .keyframe-title-input { position: fixed; z-index: 1; box-sizing: border-box; font: 14px sans-serif; padding: 2px; }
         .keyframe-thumbnail-duration { display: block; color: #666; font-size: 12px; margin-top: 3px; }
         #keyframe-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         #keyframe-controls label { margin-left: 8px; }
@@ -21,18 +30,29 @@
             <button id="svg-file-button" type="button">Open</button>
         </div>
         <div id="keyframe-panel" hidden="hidden">
-            <div id="keyframe-list" role="list"></div>
+            <div id="timeline-viewport">
+                <div id="timeline-content">
+                    <div id="timeline-track"></div>
+                    <div id="timeline-playhead" class="timeline-playhead"></div>
+                </div>
+            </div>
+            <div id="gallery-viewport">
+                <div id="keyframe-list" role="list">
+                    <div id="gallery-playhead" class="gallery-playhead"></div>
+                </div>
+            </div>
             <div id="keyframe-controls">
                 <button id="previous-keyframe-button" type="button">◀</button>
                 <button id="play-button" type="button">Play</button>
                 <button id="next-keyframe-button" type="button">▶</button>
                 <label>Time to next: <input id="duration-input" type="number" min="0" step="0.1" value="1.0"/></label>
-                <button id="add-keyframe-button" type="button">Duplicate</button>
                 <button id="delete-keyframe-button" type="button">Delete Keyframe</button>
             </div>
         </div>
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="svg.js" parse="text"/></script>
+        <script type="text/javascript"><xi:include href="history.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
+        <script type="text/javascript"><xi:include href="edit.js" parse="text"/></script>
     </body>
 </html>

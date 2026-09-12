@@ -1,5 +1,4 @@
 const svg_file_button = document.getElementById("svg-file-button");
-const add_keyframe_button = document.getElementById("add-keyframe-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
 const file_controls = document.getElementById("file-controls");
@@ -9,6 +8,12 @@ const previous_keyframe_button = document.getElementById("previous-keyframe-butt
 const play_button = document.getElementById("play-button");
 const next_keyframe_button = document.getElementById("next-keyframe-button");
 const duration_input = document.getElementById("duration-input");
+const timeline_viewport = document.getElementById("timeline-viewport");
+const timeline_content = document.getElementById("timeline-content");
+const timeline_track = document.getElementById("timeline-track");
+const gallery_viewport = document.getElementById("gallery-viewport");
+const timeline_scale = 20;
+const gallery_card_step = 100;
 let svg_document = null;
 const keyframe_ui = { layers: [], selected_index: 0 };
 const playback = {
@@ -90,7 +95,7 @@ function select_keyframe(index) {
     playback.transition_start = null;
     playback.last_now = null;
     refresh_keyframe_ui();
-    keyframe_list.children[keyframe_ui.selected_index].focus();
+    keyframe_list.querySelectorAll(".keyframe-thumbnail")[keyframe_ui.selected_index].focus();
 }
 
 function change_duration() {
@@ -104,6 +109,7 @@ function change_duration() {
     const parsed = parse_svg(svg_document.text);
     set_keyframe_duration(get_keyframe_layers(parsed)[keyframe_ui.selected_index], duration);
     svg_document.text = new XMLSerializer().serializeToString(parsed);
+    void history_record("Change keyframe duration", svg_document.text);
     refresh_keyframe_ui();
 }
 
@@ -130,6 +136,7 @@ async function open_svg_file() {
     try {
         const opened = await file_io.open_svg();
         svg_document = opened;
+        await history_open(opened);
         keyframe_ui.selected_index = 0;
         refresh_keyframe_ui();
         svg_file_button.textContent = "Save";
@@ -150,18 +157,38 @@ async function save_svg_file() {
     catch (error) { console.error("Save failed: " + error.message); }
 }
 
+function create_keyframe_at_time(time) {
+    stop_playback();
+    const old_text = svg_document.text;
+    try {
+        const result = add_keyframe_at_time(old_text, time);
+        if (result.existing_index !== undefined) {
+            keyframe_ui.selected_index = result.existing_index;
+        } else {
+            svg_document.text = result.text;
+            void history_record("Add keyframe", svg_document.text);
+            keyframe_ui.selected_index = result.index;
+        }
+        refresh_keyframe_ui();
+    } catch (error) {
+        svg_document.text = old_text;
+        console.error("Add keyframe failed: " + error.message);
+    }
+}
+
 function create_keyframe() {
     stop_playback();
     const old_text = svg_document.text;
     const old_index = keyframe_ui.selected_index;
     try {
         svg_document.text = add_keyframe(old_text, old_index);
+        void history_record("Duplicate keyframe", svg_document.text);
         keyframe_ui.selected_index = old_index + 1;
         refresh_keyframe_ui();
     } catch (error) {
         svg_document.text = old_text;
         keyframe_ui.selected_index = old_index;
-        console.error("Add keyframe failed: " + error.message);
+        console.error("Duplicate keyframe failed: " + error.message);
     }
 }
 
@@ -171,6 +198,7 @@ function remove_keyframe() {
     const old_index = keyframe_ui.selected_index;
     try {
         svg_document.text = delete_keyframe(old_text, old_index);
+        void history_record("Delete keyframe", svg_document.text);
         keyframe_ui.selected_index = Math.max(0, old_index - 1);
         refresh_keyframe_ui();
     } catch (error) {
@@ -181,12 +209,15 @@ function remove_keyframe() {
 }
 
 svg_file_button.onclick = open_svg_file;
-add_keyframe_button.onclick = create_keyframe;
 delete_keyframe_button.onclick = remove_keyframe;
 previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index - 1);
 next_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index + 1);
 play_button.onclick = toggle_playback;
 duration_input.oninput = change_duration;
+timeline_track.onclick = event => {
+    const time = Math.max(0, (event.offsetX + timeline_viewport.scrollLeft) / timeline_scale);
+    create_keyframe_at_time(time);
+};
 
 document.addEventListener("keydown", event => {
     if (event.target === duration_input || event.target.matches("input, textarea, select")) return;

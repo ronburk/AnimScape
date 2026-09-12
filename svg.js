@@ -134,11 +134,46 @@ function show_keyframe_transition(svg_document, current_index, next_index, progr
 
 function render_keyframe_thumbnails(svg_document, selected_index) {
     const layers = get_keyframe_layers(svg_document);
-    keyframe_list.replaceChildren();
+    const times = [];
+    let time = 0;
+    layers.forEach((layer, index) => {
+        times.push(time);
+        if (index + 1 < layers.length) time += get_keyframe_duration(layer);
+    });
+    const total_time = Math.max(time, 1);
+    timeline_track.replaceChildren();
+    timeline_track.style.position = "relative";
+    timeline_track.style.height = "42px";
+    timeline_track.style.width = total_time * timeline_scale + "px";
+    const axis = document.createElement("div");
+    axis.className = "timeline-axis";
+    axis.style.width = total_time * timeline_scale + "px";
+    for (let tick = 0; tick <= Math.ceil(total_time); ++tick) {
+        const mark = document.createElement("span");
+        mark.className = "timeline-tick";
+        mark.style.left = tick * timeline_scale + "px";
+        mark.textContent = tick + "s";
+        axis.append(mark);
+    }
+    timeline_track.append(axis);
+    layers.forEach((layer, index) => {
+        const marker = document.createElement("button");
+        marker.type = "button";
+        marker.className = "timeline-marker" + (index === selected_index ? " selected" : "");
+        marker.style.left = times[index] * timeline_scale + "px";
+        marker.title = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
+        marker.onclick = event => { event.stopPropagation(); select_keyframe(index); };
+        timeline_track.append(marker);
+    });
+    timeline_content.style.width = Math.max(total_time * timeline_scale, timeline_viewport.clientWidth) + "px";
+    keyframe_list.replaceChildren(document.getElementById("gallery-playhead"));
+    const gallery_width = Math.max(layers.length * gallery_card_step, gallery_viewport.clientWidth);
+    keyframe_list.style.width = gallery_width + "px";
     layers.forEach((layer, index) => {
         const button = document.createElement("button");
         button.type = "button";
         button.dataset.keyframeIndex = index;
+        button.style.left = (index * gallery_card_step + gallery_card_step / 2) + "px";
         button.className = "keyframe-thumbnail" + (index === selected_index ? " selected" : "");
         const copy = svg_document.documentElement.cloneNode(true);
         hide_other_layers(copy, index);
@@ -157,6 +192,112 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         button.onclick = () => select_keyframe(index);
         keyframe_list.append(button);
     });
+    render_playheads(times[selected_index]);
+}
+
+function render_playheads(time) {
+    if (!keyframe_ui || keyframe_ui.layers.length === 0) return;
+    const times = [];
+    let elapsed = 0;
+    keyframe_ui.layers.forEach((layer, index) => {
+        times.push(elapsed);
+        if (index + 1 < keyframe_ui.layers.length) elapsed += get_keyframe_duration(layer);
+    });
+    const selected = keyframe_ui.selected_index;
+    document.getElementById("timeline-playhead").style.left = time * timeline_scale + "px";
+    document.getElementById("gallery-playhead").style.left =
+        (selected * gallery_card_step + gallery_card_step / 2) + "px";
+}
+
+function ensure_animscape_object_ids(svg) {
+    const used = new Set(get_animscape_objects(svg).map(get_animscape_object_id));
+    let number = 1;
+    get_animscape_objects(svg).forEach(element => {
+        if (get_animscape_object_id(element)) return;
+        let object_id;
+        do { object_id = "object-" + number++; } while (used.has(object_id));
+        element.setAttributeNS(animscape_namespace, "animscape:object-id", object_id);
+        used.add(object_id);
+    });
+}
+
+function clone_keyframe_layer(svg, source) {
+    const copy = source.cloneNode(true);
+    const used_ids = new Set(Array.from(svg.querySelectorAll("[id]")).map(element => element.id));
+    const id_map = new Map();
+    copy.querySelectorAll("[id]").forEach(element => {
+        const old_id = element.id;
+        let new_id = old_id + "-copy";
+        let copy_number = 2;
+        while (used_ids.has(new_id)) new_id = old_id + "-copy-" + copy_number++;
+        id_map.set(old_id, new_id);
+        element.setAttribute("id", new_id);
+        used_ids.add(new_id);
+    });
+    copy.querySelectorAll("*").forEach(element => {
+        Array.from(element.attributes).forEach(attribute => {
+            let value = attribute.value.replace(/url\(#([^)]*)\)/g,
+                (match, id) => id_map.has(id) ? "url(#" + id_map.get(id) + ")" : match);
+            value = value.replace(/^#(.+)$/, (match, id) =>
+                id_map.has(id) ? "#" + id_map.get(id) : match);
+            if (value !== attribute.value) element.setAttribute(attribute.name, value);
+        });
+    });
+    return copy;
+}
+
+function add_keyframe_at_time(svg_text, time) {
+    const parsed = parse_svg(svg_text);
+    ensure_animscape_object_ids(parsed.documentElement);
+    const layers = get_keyframe_layers(parsed);
+    let start = 0;
+    for (let index = 0; index < layers.length; ++index) {
+        const duration = index + 1 < layers.length ? get_keyframe_duration(layers[index]) : 0;
+        if (Math.abs(time - start) < 0.001) return {existing_index: index};
+        if (index + 1 < layers.length && time < start + duration) {
+            const next_time = start + duration;
+            const progress = duration === 0 ? 0 : (time - start) / duration;
+            const current = layers[index];
+            const next = layers[index + 1];
+            const copy = clone_keyframe_layer(parsed.documentElement, current);
+            const current_objects = new Map(get_animscape_objects(current)
+                .map(element => [get_animscape_object_id(element), element]));
+            const next_objects = new Map(get_animscape_objects(next)
+                .map(element => [get_animscape_object_id(element), element]));
+            const copy_objects = new Map(get_animscape_objects(copy)
+                .map(element => [get_animscape_object_id(element), element]));
+            current_objects.forEach((source, object_id) => {
+                const target = next_objects.get(object_id);
+                const output = copy_objects.get(object_id);
+                if (target && output) interpolate_animscape_object(output, target, progress);
+            });
+            copy.setAttribute("id", "animscape-keyframe-" + Date.now());
+            copy.setAttributeNS(inkscape_namespace, "inkscape:label", next_keyframe_label(layers));
+            set_keyframe_duration(current, time - start);
+            set_keyframe_duration(copy, next_time - time);
+            current.after(copy);
+            return {text: new XMLSerializer().serializeToString(parsed), index: index + 1};
+        }
+        start += duration;
+    }
+    if (Math.abs(time - start) < 0.001) return {existing_index: layers.length - 1};
+    return {existing_index: layers.length - 1};
+}
+
+function next_keyframe_label(layers) {
+    let number = 0;
+    layers.forEach(layer => {
+        const match = /^Keyframe ([0-9]+)$/.exec(
+            layer.getAttributeNS(inkscape_namespace, "label") || "");
+        if (match) number = Math.max(number, Number(match[1]));
+    });
+    return "Keyframe " + (number + 1);
+}
+
+function rename_keyframe(svg_text, index, label) {
+    const parsed = parse_svg(svg_text);
+    get_keyframe_layers(parsed)[index].setAttributeNS(inkscape_namespace, "inkscape:label", label);
+    return new XMLSerializer().serializeToString(parsed);
 }
 
 function draw_svg(svg_text) {
@@ -209,7 +350,7 @@ function add_keyframe(svg_text, selected_index) {
             if (value !== attribute.value) element.setAttribute(attribute.name, value);
         });
     });
-    copy.setAttributeNS(inkscape_namespace, "inkscape:label", "Keyframe " + (selected_index + 2));
+    copy.setAttributeNS(inkscape_namespace, "inkscape:label", next_keyframe_label(layers));
     source.after(copy);
     return new XMLSerializer().serializeToString(parsed);
 }
