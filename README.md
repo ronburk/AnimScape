@@ -1,2 +1,5 @@
 # AnimScape
-Tinker with animating via Inkscape
+
+Tinker with animating via Inkscape.
+
+[Try AnimScape online](https://ronburk.github.io/AnimScape/AnimScape.html)
