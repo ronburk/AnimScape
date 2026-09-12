@@ -1,2 +1,9 @@
-AnimScape.html: mainhtml.xml fileio.js svg.js history.js main.js edit.js build.xslt
+AnimScape.html: mainhtml.xml *.js build.xslt
     xsltproc --xinclude build.xslt mainhtml.xml > AnimScape.html
+
+index.html: AnimScape.html
+    cp $< $@
+
+publish: index.html
+    shell git add index.html && (git diff --cached --quiet -- index.html || git commit -m "Publish AnimScape" -- index.html)
+    shell git push
