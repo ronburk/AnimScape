@@ -139,7 +139,23 @@ async function save_svg(document, edited_text) {
     };
 }
 
+async function create_webm(filename) {
+    if (typeof window.showSaveFilePicker !== "function")
+        throw new Error("This browser cannot save WebM video files.");
+    const file_handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{description: "WebM video", accept: {"video/webm": [".webm"]}}]
+    });
+    const writable = await file_handle.createWritable();
+    return {
+        write: chunk => writable.write(chunk),
+        close: () => writable.close(),
+        abort: () => writable.abort()
+    };
+}
+
 window.file_io = Object.freeze({
     open_svg: open_svg,
-    save_svg: save_svg
+    save_svg: save_svg,
+    create_webm: create_webm
 });
