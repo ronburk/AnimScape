@@ -53,24 +53,18 @@ window.file_io = (() => {
         });
     }
 
-    async function choose_workspace() {
+    async function choose_workspace(mode = "read") {
         if (!workspace_handle) {
             await load_saved_workspace();
         }
         if (!workspace_handle) {
-            workspace_handle = await window.showDirectoryPicker({
-                mode: "readwrite"
-            });
+            workspace_handle = await window.showDirectoryPicker({mode});
             await save_workspace(workspace_handle);
         }
 
-        let permission = await workspace_handle.queryPermission({
-            mode: "readwrite"
-        });
+        let permission = await workspace_handle.queryPermission({mode});
         if (permission !== "granted") {
-            permission = await workspace_handle.requestPermission({
-                mode: "readwrite"
-            });
+            permission = await workspace_handle.requestPermission({mode});
         }
         if (permission !== "granted") {
             throw new DOMException("Workspace permission was not granted.",
@@ -119,7 +113,7 @@ window.file_io = (() => {
             throw new TypeError("save_svg() requires SVG text.");
         }
 
-        await choose_workspace();
+        await choose_workspace("readwrite");
 
         const file = await document.file_handle.getFile();
         const current_state = {
@@ -148,7 +142,7 @@ window.file_io = (() => {
     }
 
     async function create_webm(filename) {
-        await choose_workspace();
+        await choose_workspace("readwrite");
         const file_handle = await workspace_handle.getFileHandle(filename, {
             create: true
         });
