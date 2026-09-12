@@ -1,2 +1,8 @@
 AnimScape.html
 bludfile.luac
+
+# Emacs auto-save files
+\#*\#
+
+# AnimScape history files
+*.hst
