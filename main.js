@@ -176,6 +176,22 @@ function create_keyframe_at_time(time) {
     }
 }
 
+function create_keyframe() {
+    stop_playback();
+    const old_text = svg_document.text;
+    const old_index = keyframe_ui.selected_index;
+    try {
+        svg_document.text = add_keyframe(old_text, old_index);
+        void history_record("Duplicate keyframe", svg_document.text);
+        keyframe_ui.selected_index = old_index + 1;
+        refresh_keyframe_ui();
+    } catch (error) {
+        svg_document.text = old_text;
+        keyframe_ui.selected_index = old_index;
+        console.error("Duplicate keyframe failed: " + error.message);
+    }
+}
+
 function remove_keyframe() {
     stop_playback();
     const old_text = svg_document.text;
@@ -218,5 +234,8 @@ document.addEventListener("keydown", event => {
     } else if (event.key === "Delete") {
         event.preventDefault();
         remove_keyframe();
+    } else if (event.ctrlKey && event.key.toLowerCase() === "d") {
+        event.preventDefault();
+        create_keyframe();
     }
 });
