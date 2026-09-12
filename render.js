@@ -15,10 +15,14 @@ function get_export_canvas_size(svg) {
 }
 
 function svg_to_png_blob(svg) {
-    const text = new XMLSerializer().serializeToString(svg);
+    return svg_text_to_png_blob(new XMLSerializer().serializeToString(svg));
+}
+
+function svg_text_to_png_blob(text) {
+    const parsed = parse_svg(text);
     const source_url = URL.createObjectURL(new Blob([text], {type: "image/svg+xml"}));
     const image = new Image();
-    const size = get_export_canvas_size(svg);
+    const size = get_export_canvas_size(parsed.documentElement);
     const canvas = document.createElement("canvas");
     canvas.width = size.width;
     canvas.height = size.height;
@@ -42,6 +46,11 @@ function svg_to_png_blob(svg) {
         };
         image.src = source_url;
     });
+}
+
+function render_png_at_time(svg_text, time) {
+    const parsed = parse_svg(svg_text);
+    return svg_text_to_png_blob(get_svg_at_time(parsed, time));
 }
 
 async function export_png() {
