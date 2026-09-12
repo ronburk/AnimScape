@@ -1,5 +1,6 @@
 const svg_file_button = document.getElementById("svg-file-button");
 const export_png_button = document.getElementById("export-png-button");
+const export_webm_button = document.getElementById("export-webm-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
 const file_controls = document.getElementById("file-controls");
@@ -131,7 +132,9 @@ function refresh_keyframe_ui() {
     keyframe_panel.hidden = false;
     keyframe_controls.append(svg_file_button);
     keyframe_controls.append(export_png_button);
+    keyframe_controls.append(export_webm_button);
     export_png_button.disabled = false;
+    export_webm_button.disabled = false;
     file_controls.hidden = true;
 }
 
@@ -149,7 +152,9 @@ async function open_svg_file() {
         keyframe_panel.hidden = true;
         file_controls.append(svg_file_button);
         file_controls.append(export_png_button);
+        file_controls.append(export_webm_button);
         export_png_button.disabled = true;
+        export_webm_button.disabled = true;
         svg_file_button.textContent = "Open";
         svg_file_button.onclick = open_svg_file;
         file_controls.hidden = false;
@@ -226,6 +231,21 @@ export_png_button.onclick = async () => {
     try { await export_png(); }
     catch (error) { report_error("Export PNG", "The current image could not be exported as a PNG.", error); }
     finally { export_png_button.disabled = false; }
+};
+export_webm_button.onclick = async () => {
+    export_webm_button.disabled = true;
+    try {
+        await export_webm({}, {
+            on_progress: progress => {
+                export_webm_button.textContent = "Render WebM " + Math.round(progress * 100) + "%";
+            }
+        });
+    } catch (error) {
+        report_error("Render WebM", "The animation could not be rendered as a WebM video.", error);
+    } finally {
+        export_webm_button.textContent = "Render WebM";
+        export_webm_button.disabled = false;
+    }
 };
 delete_keyframe_button.onclick = remove_keyframe;
 previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index - 1);

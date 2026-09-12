@@ -34,6 +34,7 @@
         <div id="file-controls">
             <button id="svg-file-button" type="button">Open</button>
             <button id="export-png-button" type="button" disabled="disabled">Export PNG</button>
+            <button id="export-webm-button" type="button" disabled="disabled">Render WebM</button>
         </div>
         <dialog id="error-dialog" aria-labelledby="error-dialog-title" aria-describedby="error-dialog-message">
             <form method="dialog">
