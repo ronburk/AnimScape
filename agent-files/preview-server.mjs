@@ -18,7 +18,7 @@ createServer(async (request, response) => {
         return;
     }
     try {
-        const html = await readFile(new URL('../AnimScape.html', import.meta.url));
+        const html = await readFile(new URL('./AnimScape.html', import.meta.url));
         response.writeHead(200, {
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'no-store'
