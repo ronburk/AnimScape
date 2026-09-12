@@ -53,6 +53,28 @@ window.file_io = (() => {
         });
     }
 
+    function delete_saved_workspace() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(workspace_database_name, 1);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                const database = request.result;
+                const remove = database.transaction(workspace_store_name, "readwrite")
+                    .objectStore(workspace_store_name).delete(workspace_key);
+                remove.onerror = () => reject(remove.error);
+                remove.onsuccess = () => {
+                    database.close();
+                    resolve();
+                };
+            };
+        });
+    }
+
+    async function forget_workspace() {
+        workspace_handle = null;
+        await delete_saved_workspace();
+    }
+
     async function choose_workspace(mode = "read") {
         if (!workspace_handle) {
             await load_saved_workspace();
@@ -83,6 +105,7 @@ window.file_io = (() => {
         if (files.length === 0) {
             const error = new Error("The selected directory contains no SVG files.");
             error.code = "no-svg-files";
+            await forget_workspace();
             throw error;
         }
         return files;
