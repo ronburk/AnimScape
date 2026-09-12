@@ -4,6 +4,9 @@ const export_webm_button = document.getElementById("export-webm-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
 const file_controls = document.getElementById("file-controls");
+const svg_file_selection = document.getElementById("svg-file-selection");
+const svg_file_list = document.getElementById("svg-file-list");
+const open_selected_svg_button = document.getElementById("open-selected-svg-button");
 const keyframe_list = document.getElementById("keyframe-list");
 const keyframe_controls = document.getElementById("keyframe-controls");
 const previous_keyframe_button = document.getElementById("previous-keyframe-button");
@@ -17,6 +20,7 @@ const gallery_viewport = document.getElementById("gallery-viewport");
 const timeline_scale = 20;
 const gallery_card_step = 100;
 let svg_document = null;
+let svg_choices = [];
 const keyframe_ui = { layers: [], selected_index: 0 };
 const playback = {
     running: false,
@@ -138,9 +142,60 @@ function refresh_keyframe_ui() {
     file_controls.hidden = true;
 }
 
-async function open_svg_file() {
+function reset_open_controls() {
+    svg_document = null;
+    keyframe_panel.hidden = true;
+    file_controls.append(svg_file_button);
+    file_controls.append(export_png_button);
+    file_controls.append(export_webm_button);
+    export_png_button.disabled = true;
+    export_webm_button.disabled = true;
+    svg_file_button.textContent = "Open";
+    svg_file_button.onclick = choose_svg_file;
+    svg_file_selection.hidden = true;
+    open_selected_svg_button.hidden = true;
+    svg_choices = [];
+    file_controls.hidden = false;
+}
+
+function report_open_error(error) {
+    reset_open_controls();
+    const user_message = error.code === "history-format"
+        ? "The SVG's history file is from an older AnimScape version. Back up and remove the matching .hst file, then try opening the SVG again."
+        : error.code === "no-svg-files"
+            ? error.message
+            : error.message === "The selected file is not valid SVG."
+                ? error.message
+                : "The selected SVG could not be opened.";
+    report_error("Open", user_message, error);
+}
+
+async function choose_svg_file() {
     try {
-        const opened = await file_io.open_svg();
+        svg_choices = await file_io.list_svg_files();
+        svg_file_list.replaceChildren();
+        svg_choices.forEach((file_handle, index) => {
+            const option = document.createElement("option");
+            option.value = String(index);
+            option.textContent = file_handle.name;
+            svg_file_list.append(option);
+        });
+        svg_file_selection.hidden = false;
+        open_selected_svg_button.hidden = false;
+        svg_file_list.focus();
+    } catch (error) {
+        report_open_error(error);
+    }
+}
+
+async function open_selected_svg() {
+    const file_handle = svg_choices[Number(svg_file_list.value)];
+    if (!file_handle) {
+        report_error("Open", "Select an SVG file first.");
+        return;
+    }
+    try {
+        const opened = await file_io.open_svg(file_handle);
         svg_document = opened;
         await history_open(opened);
         keyframe_ui.selected_index = 0;
@@ -148,22 +203,7 @@ async function open_svg_file() {
         svg_file_button.textContent = "Save";
         svg_file_button.onclick = save_svg_file;
     } catch (error) {
-        svg_document = null;
-        keyframe_panel.hidden = true;
-        file_controls.append(svg_file_button);
-        file_controls.append(export_png_button);
-        file_controls.append(export_webm_button);
-        export_png_button.disabled = true;
-        export_webm_button.disabled = true;
-        svg_file_button.textContent = "Open";
-        svg_file_button.onclick = open_svg_file;
-        file_controls.hidden = false;
-        const user_message = error.code === "history-format"
-            ? "The SVG's history file is from an older AnimScape version. Back up and remove the matching .hst file, then try opening the SVG again."
-            : error.message === "The selected file is not valid SVG."
-                ? error.message
-                : "The selected SVG could not be opened.";
-        report_error("Open", user_message, error);
+        report_open_error(error);
     }
 }
 
@@ -225,7 +265,8 @@ function remove_keyframe() {
     }
 }
 
-svg_file_button.onclick = open_svg_file;
+svg_file_button.onclick = choose_svg_file;
+open_selected_svg_button.onclick = open_selected_svg;
 export_png_button.onclick = async () => {
     export_png_button.disabled = true;
     try { await export_png(); }
