@@ -3,6 +3,22 @@ const export_png_button = document.getElementById("export-png-button");
 const export_webm_button = document.getElementById("export-webm-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
+let keyframe_panel_height = null;
+function report_keyframe_panel_height(source) {
+    const height = keyframe_panel.getBoundingClientRect().height;
+    if (keyframe_panel_height !== height) {
+        console.log("keyframe-panel height changed", {
+            source: source,
+            old_height: keyframe_panel_height,
+            new_height: height,
+            viewport_height: window.innerHeight
+        });
+        keyframe_panel_height = height;
+    }
+}
+new ResizeObserver(() => report_keyframe_panel_height("ResizeObserver"))
+    .observe(keyframe_panel);
+window.addEventListener("resize", () => report_keyframe_panel_height("window.resize"));
 const file_controls = document.getElementById("file-controls");
 const keyframe_list = document.getElementById("keyframe-list");
 const keyframe_controls = document.getElementById("keyframe-controls");
