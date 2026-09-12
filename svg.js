@@ -30,10 +30,14 @@ function serialize_display_svg(svg_root) {
     return new XMLSerializer().serializeToString(svg_root);
 }
 
-function show_keyframe(svg_document, index) {
+function get_keyframe_svg(svg_document, index) {
     const copy = svg_document.documentElement.cloneNode(true);
     hide_other_layers(copy, index);
-    draw_svg(serialize_display_svg(copy));
+    return serialize_display_svg(copy);
+}
+
+function show_keyframe(svg_document, index) {
+    draw_svg(get_keyframe_svg(svg_document, index));
 }
 
 function get_keyframe_duration(layer) {
@@ -107,7 +111,7 @@ function interpolate_animscape_object(current, next, progress) {
     interpolate_transform(current, next, progress);
 }
 
-function show_keyframe_transition(svg_document, current_index, next_index, progress) {
+function get_keyframe_transition_svg(svg_document, current_index, next_index, progress) {
     const copy = svg_document.documentElement.cloneNode(true);
     const layers = get_keyframe_layers({documentElement: copy});
     layers.forEach((layer, index) => {
@@ -129,7 +133,37 @@ function show_keyframe_transition(svg_document, current_index, next_index, progr
     next_objects.forEach((next, object_id) => {
         if (!current_objects.has(object_id)) set_effective_opacity(next, progress);
     });
-    draw_svg(serialize_display_svg(copy));
+    return serialize_display_svg(copy);
+}
+
+function show_keyframe_transition(svg_document, current_index, next_index, progress) {
+    draw_svg(get_keyframe_transition_svg(svg_document, current_index, next_index, progress));
+}
+
+function get_animation_duration(svg_document) {
+    const layers = get_keyframe_layers(svg_document);
+    let duration = 0;
+    layers.forEach((layer, index) => {
+        if (index + 1 < layers.length) duration += get_keyframe_duration(layer);
+    });
+    return duration;
+}
+
+function get_svg_at_time(svg_document, time) {
+    const layers = get_keyframe_layers(svg_document);
+    if (layers.length === 0) throw new Error("The SVG has no Inkscape layers.");
+    if (!Number.isFinite(time) || time < 0) throw new Error("Animation time must be non-negative.");
+
+    let start = 0;
+    for (let index = 0; index + 1 < layers.length; ++index) {
+        const duration = get_keyframe_duration(layers[index]);
+        if (time < start + duration) {
+            const progress = duration === 0 ? 1 : (time - start) / duration;
+            return get_keyframe_transition_svg(svg_document, index, index + 1, progress);
+        }
+        start += duration;
+    }
+    return get_keyframe_svg(svg_document, layers.length - 1);
 }
 
 function render_keyframe_thumbnails(svg_document, selected_index) {
