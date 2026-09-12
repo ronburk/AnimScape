@@ -3,28 +3,6 @@ const export_png_button = document.getElementById("export-png-button");
 const export_webm_button = document.getElementById("export-webm-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
-let keyframe_panel_height = null;
-function resize_box_size(size) {
-    const box = Array.isArray(size) ? size[0] : size;
-    return box ? {inline_size: box.inlineSize, block_size: box.blockSize} : null;
-}
-function report_keyframe_panel_height(source, entry) {
-    const height = keyframe_panel.getBoundingClientRect().height;
-    if (keyframe_panel_height !== height) {
-        console.log("keyframe-panel height changed", JSON.stringify({
-            source: source,
-            old_height: keyframe_panel_height,
-            new_height: height,
-            viewport_height: window.innerHeight,
-            border_box_size: resize_box_size(entry?.borderBoxSize),
-            content_box_size: resize_box_size(entry?.contentBoxSize)
-        }));
-        keyframe_panel_height = height;
-    }
-}
-new ResizeObserver(entries => report_keyframe_panel_height("ResizeObserver", entries[0]))
-    .observe(keyframe_panel, {box: "border-box"});
-window.addEventListener("resize", () => report_keyframe_panel_height("window.resize"));
 const file_controls = document.getElementById("file-controls");
 const keyframe_list = document.getElementById("keyframe-list");
 const keyframe_controls = document.getElementById("keyframe-controls");
