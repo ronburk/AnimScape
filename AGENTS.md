@@ -27,7 +27,15 @@
   apt-get -o APT::Sandbox::User=root -o Dir::Cache::archives=/tmp/apt-archives install -y xsltproc
   ```
 
-- The `blud` executable is not included in this repository. Reuse an existing working executable for the current platform by copying it into the checkout as `./blud`; keep it out of commits. If no executable is available, obtain/build one from `ronburk/blud` using that repository's build instructions.
+- The `blud` executable is not included in this repository. On Ubuntu x86-64, download the published executable into the repository root and keep it out of commits:
+
+  ```sh
+  curl --fail --location --output blud https://github.com/ronburk/blud/releases/download/ubuntu-build/blud
+  chmod +x blud
+  ./blud -v
+  ```
+
+  If the published executable is unavailable or cannot run on the current platform, obtain/build `blud` from `ronburk/blud` using that repository's build instructions.
 - From the AnimScape repository root, run `./blud`. It runs `xsltproc --xinclude build.xslt mainhtml.xml > AnimScape.html`. The generated standalone page is intentionally ignored by Git.
 - Before starting the supervised preview, copy the generated page into the preview root: `cp AnimScape.html agent-files/AnimScape.html`. The preview sandbox restricts the adapter to its selected root, so `agent-files/preview-server.mjs` must read `./AnimScape.html`; it cannot read `../AnimScape.html` from the repository root.
 - A successful build is sufficient for this setup step; browser testing is a separate step described below.
