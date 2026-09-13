@@ -1,5 +1,7 @@
 /* Append-only history snapshots for the currently opened SVG. */
 
+window.history_io = (() => {
+
 let history_file_handle = null;
 let history_entries = [];
 let history_tail = Promise.resolve();
@@ -156,3 +158,9 @@ async function history_record(operation, svg_text) {
     });
     return history_tail;
 }
+
+return Object.freeze({
+    open: history_open,
+    record: history_record
+});
+})();
