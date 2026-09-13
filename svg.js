@@ -225,7 +225,7 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         marker.className = "timeline-marker" + (index === selected_index ? " selected" : "");
         marker.style.left = timeline_x_for_time(times[index]) + "px";
         marker.title = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
-        marker.onclick = event => { event.stopPropagation(); select_keyframe(index); };
+        marker.onclick = event => { event.stopPropagation(); main_ui.select_keyframe(index); };
         track.append(marker);
     });
     content.style.width = "100%";
@@ -245,7 +245,7 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         copy.setAttribute("height", "44");
         copy.setAttribute("preserveAspectRatio", "xMidYMid meet");
         button.append(document.importNode(copy, true));
-        button.onclick = () => select_keyframe(index);
+        button.onclick = () => main_ui.select_keyframe(index);
         keyframe_list.append(button);
     });
     render_playheads(times[selected_index]);
