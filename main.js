@@ -134,6 +134,15 @@ function update_history_menu() {
     const state = history_io.state();
     undo_button.disabled = history_navigation_busy || !svg_document || !state.can_undo;
     redo_button.disabled = history_navigation_busy || !svg_document || !state.can_redo;
+    const undo_label = state.undo_operation ? "Undo " + state.undo_operation : "Undo";
+    const redo_label = state.redo_operation ? "Redo " + state.redo_operation : "Redo";
+    undo_button.textContent = undo_label;
+    redo_button.textContent = redo_label;
+    undo_button.setAttribute("aria-label", undo_label);
+    redo_button.setAttribute("aria-label", redo_label);
+    undo_button.title = state.undo_operation ? undo_label + " (Ctrl+Z)" : "Ctrl+Z";
+    redo_button.title = state.redo_operation
+        ? redo_label + " (Ctrl+Y or Ctrl+Shift+Z)" : "Ctrl+Y or Ctrl+Shift+Z";
 }
 
 async function navigate_history(direction) {

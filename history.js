@@ -274,7 +274,10 @@ function history_state() {
     const index = history_path.indexOf(history_head);
     return {
         can_undo: history_pending === 0 && index > 0,
-        can_redo: history_pending === 0 && index >= 0 && index + 1 < history_path.length
+        can_redo: history_pending === 0 && index >= 0 && index + 1 < history_path.length,
+        undo_operation: index > 0 ? history_entries[history_head].operation : null,
+        redo_operation: index >= 0 && index + 1 < history_path.length
+            ? history_entries[history_path[index + 1]].operation : null
     };
 }
 
