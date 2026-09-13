@@ -511,6 +511,14 @@ function refresh_keyframe_state() {
     keyframe_ui.layers = get_keyframe_layers(parse_svg(svg_document.text));
 }
 
+function get_keyframe_state() {
+    return keyframe_ui;
+}
+
+function get_timeline_view() {
+    return timeline_view;
+}
+
 const timeline_elements = Object.freeze({
     viewport: timeline_viewport,
     content: timeline_content,
@@ -521,6 +529,8 @@ const timeline_elements = Object.freeze({
 
 return Object.freeze({
     get_svg_document,
+    get_keyframe_state,
+    get_timeline_view,
     get_selected_keyframe_index,
     get_keyframe_card,
     get_timeline_elements,

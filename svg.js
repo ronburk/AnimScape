@@ -6,7 +6,17 @@ const min_timeline_scale = 4;
 const max_timeline_scale = 400;
 const xmlns_namespace = "http://www.w3.org/2000/xmlns/";
 const object_id_attribute = "object-id";
-const timeline_view = { start_time: 0, pixels_per_second: default_timeline_scale };
+function get_main_timeline_state() {
+    return main_ui.get_timeline_elements();
+}
+
+function get_main_keyframe_state() {
+    return main_ui.get_keyframe_state();
+}
+
+function get_main_timeline_view() {
+    return main_ui.get_timeline_view();
+}
 
 function parse_svg(svg_text) {
     const parsed = new DOMParser().parseFromString(svg_text, "image/svg+xml");
@@ -181,13 +191,16 @@ function get_svg_at_time(svg_document, time) {
 }
 
 function render_keyframe_thumbnails(svg_document, selected_index) {
+    const elements = get_main_timeline_state();
+    const {viewport, content, track, gallery_viewport, keyframe_list} = elements;
     const layers = get_keyframe_layers(svg_document);
     const times = get_keyframe_times(svg_document);
-    const timeline_width = get_viewport_content_width(timeline_viewport);
-    timeline_track.replaceChildren();
-    timeline_track.style.position = "relative";
-    timeline_track.style.height = "42px";
-    timeline_track.style.width = "100%";
+    const timeline_view = get_main_timeline_view();
+    const timeline_width = get_viewport_content_width(viewport);
+    track.replaceChildren();
+    track.style.position = "relative";
+    track.style.height = "42px";
+    track.style.width = "100%";
     const axis = document.createElement("div");
     axis.className = "timeline-axis";
     axis.style.width = "100%";
@@ -203,7 +216,7 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         mark.textContent = format_timeline_time(tick) + "s";
         axis.append(mark);
     }
-    timeline_track.append(axis);
+    track.append(axis);
     layers.forEach((layer, index) => {
         if (times[index] < visible_start - 1 / timeline_view.pixels_per_second ||
             times[index] > visible_end + 1 / timeline_view.pixels_per_second) return;
@@ -213,9 +226,9 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         marker.style.left = timeline_x_for_time(times[index]) + "px";
         marker.title = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
         marker.onclick = event => { event.stopPropagation(); select_keyframe(index); };
-        timeline_track.append(marker);
+        track.append(marker);
     });
-    timeline_content.style.width = "100%";
+    content.style.width = "100%";
     keyframe_list.replaceChildren(document.getElementById("gallery-playhead"));
     const gallery_width = Math.max(layers.length * gallery_card_step,
         get_viewport_content_width(gallery_viewport));
@@ -240,9 +253,10 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
 }
 
 function scroll_timeline_to_keyframe(svg_document, index) {
+    const timeline_view = get_main_timeline_view();
     const time = get_keyframe_times(svg_document)[index];
     if (!Number.isFinite(time)) return;
-    const width = get_viewport_content_width(timeline_viewport);
+    const width = get_viewport_content_width(get_main_timeline_state().viewport);
     if (width <= 0) return;
     const centered_start = Math.max(0, time -
         width / (2 * timeline_view.pixels_per_second));
@@ -258,6 +272,7 @@ function get_viewport_content_width(viewport) {
 }
 
 function timeline_x_for_time(time) {
+    const timeline_view = get_main_timeline_view();
     return (time - timeline_view.start_time) * timeline_view.pixels_per_second;
 }
 
@@ -277,11 +292,14 @@ function format_timeline_time(time) {
 }
 
 function update_timeline_zoom_label() {
+    const timeline_view = get_main_timeline_view();
     const label = document.getElementById("timeline-zoom-label");
     if (label) label.textContent = format_timeline_time(timeline_view.pixels_per_second) + " px/s";
 }
 
 function render_timeline() {
+    const svg_document = main_ui.get_svg_document();
+    const keyframe_ui = get_main_keyframe_state();
     if (!svg_document || keyframe_ui.layers.length === 0) return;
     render_keyframe_thumbnails(parse_svg(svg_document.text), keyframe_ui.selected_index);
 }
@@ -297,6 +315,7 @@ function set_timeline_zoom(pixels_per_second, anchor_x = get_viewport_content_wi
 }
 
 function pan_timeline(delta_pixels) {
+    const timeline_view = get_main_timeline_view();
     timeline_view.start_time = Math.max(0,
         timeline_view.start_time + delta_pixels / timeline_view.pixels_per_second);
     render_timeline();
@@ -314,6 +333,7 @@ function fit_timeline() {
 }
 
 function render_playheads(time) {
+    const keyframe_ui = get_main_keyframe_state();
     if (!keyframe_ui || keyframe_ui.layers.length === 0) return;
     const times = [];
     let elapsed = 0;
