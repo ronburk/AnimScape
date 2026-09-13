@@ -90,7 +90,7 @@
             </form>
         </dialog>
         <div id="keyframe-panel" hidden="hidden">
-            <div id="timeline-viewport" aria-label="Timeline; drag horizontally to pan, and use the zoom controls or Ctrl-wheel to zoom">
+            <div id="timeline-viewport" aria-label="Timeline; use the mouse wheel or zoom controls to zoom, and drag or Shift-wheel to pan">
                 <div id="timeline-content">
                     <div id="timeline-track"></div>
                     <div id="timeline-playhead" class="timeline-playhead"></div>

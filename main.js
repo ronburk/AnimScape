@@ -435,16 +435,16 @@ timeline_viewport.addEventListener("pointerup", end_timeline_pan);
 timeline_viewport.addEventListener("pointercancel", end_timeline_pan);
 timeline_viewport.addEventListener("wheel", event => {
     event.preventDefault();
-    if (event.ctrlKey || event.metaKey) {
-        const rect = timeline_viewport.getBoundingClientRect();
-        const x = event.clientX - rect.left -
-            Number.parseFloat(getComputedStyle(timeline_viewport).paddingLeft);
-        set_timeline_zoom(timeline_view.pixels_per_second *
-            (event.deltaY < 0 ? 1.15 : 1 / 1.15), x);
+    if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        pan_timeline(event.deltaX || event.deltaY);
         return;
     }
-    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-    pan_timeline(delta);
+    if (event.deltaY === 0) return;
+    const rect = timeline_viewport.getBoundingClientRect();
+    const x = event.clientX - rect.left -
+        Number.parseFloat(getComputedStyle(timeline_viewport).paddingLeft);
+    set_timeline_zoom(timeline_view.pixels_per_second *
+        (event.deltaY < 0 ? 1.15 : 1 / 1.15), x);
 }, {passive: false});
 
 window.addEventListener("resize", () => {
