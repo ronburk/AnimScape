@@ -12,11 +12,13 @@ const previous_keyframe_button = document.getElementById("previous-keyframe-butt
 const play_button = document.getElementById("play-button");
 const next_keyframe_button = document.getElementById("next-keyframe-button");
 const duration_input = document.getElementById("duration-input");
+const timeline_zoom_out_button = document.getElementById("timeline-zoom-out-button");
+const timeline_zoom_in_button = document.getElementById("timeline-zoom-in-button");
+const timeline_fit_button = document.getElementById("timeline-fit-button");
 const timeline_viewport = document.getElementById("timeline-viewport");
 const timeline_content = document.getElementById("timeline-content");
 const timeline_track = document.getElementById("timeline-track");
 const gallery_viewport = document.getElementById("gallery-viewport");
-const timeline_scale = 20;
 const gallery_card_step = 100;
 let svg_document = null;
 let svg_choices = [];
@@ -128,11 +130,11 @@ function refresh_keyframe_ui() {
     keyframe_ui.selected_index = Math.min(keyframe_ui.selected_index, keyframe_ui.layers.length - 1);
     playback.frame_index = keyframe_ui.selected_index;
     playback.progress = 0;
+    keyframe_panel.hidden = false;
     show_keyframe(parsed, keyframe_ui.selected_index);
     render_keyframe_thumbnails(parsed, keyframe_ui.selected_index);
     update_duration_input();
     delete_keyframe_button.disabled = keyframe_ui.layers.length <= 1;
-    keyframe_panel.hidden = false;
     save_svg_button.disabled = false;
     export_png_button.disabled = false;
     export_webm_button.disabled = false;
@@ -141,6 +143,8 @@ function refresh_keyframe_ui() {
 
 function reset_open_controls() {
     svg_document = null;
+    timeline_view.start_time = 0;
+    timeline_view.pixels_per_second = default_timeline_scale;
     clear_svg();
     keyframe_panel.hidden = true;
     if (open_svg_dialog.open) open_svg_dialog.close();
@@ -193,6 +197,8 @@ async function open_selected_svg() {
         const opened = await file_io.open_svg(file_handle);
         svg_document = opened;
         await history_io.open(opened);
+        timeline_view.start_time = 0;
+        timeline_view.pixels_per_second = default_timeline_scale;
         keyframe_ui.selected_index = 0;
         refresh_keyframe_ui();
         open_svg_dialog.close();
@@ -292,10 +298,77 @@ previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_in
 next_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index + 1);
 play_button.onclick = toggle_playback;
 duration_input.oninput = change_duration;
+timeline_zoom_out_button.onclick = () => set_timeline_zoom(timeline_view.pixels_per_second / 1.5);
+timeline_zoom_in_button.onclick = () => set_timeline_zoom(timeline_view.pixels_per_second * 1.5);
+timeline_fit_button.onclick = fit_timeline;
 timeline_track.onclick = event => {
-    const time = Math.max(0, (event.offsetX + timeline_viewport.scrollLeft) / timeline_scale);
+    if (timeline_pan.suppress_click) {
+        timeline_pan.suppress_click = false;
+        return;
+    }
+    const rect = timeline_track.getBoundingClientRect();
+    const time = Math.max(0, timeline_view.start_time +
+        (event.clientX - rect.left) / timeline_view.pixels_per_second);
     create_keyframe_at_time(time);
 };
+
+const timeline_pan = { pointer_id: null, last_x: 0, moved: false, active: false, suppress_click: false };
+timeline_viewport.addEventListener("pointerdown", event => {
+    if (event.button !== 0 && event.button !== 1) return;
+    timeline_pan.pointer_id = event.pointerId;
+    timeline_pan.last_x = event.clientX;
+    timeline_pan.moved = false;
+    timeline_pan.active = event.button === 1 || event.shiftKey;
+    if (timeline_pan.active) {
+        event.preventDefault();
+        timeline_viewport.classList.add("panning");
+        timeline_viewport.setPointerCapture(event.pointerId);
+    }
+});
+timeline_viewport.addEventListener("pointermove", event => {
+    if (event.pointerId !== timeline_pan.pointer_id) return;
+    const delta = event.clientX - timeline_pan.last_x;
+    if (!timeline_pan.active && Math.abs(delta) >= 4) {
+        timeline_pan.active = true;
+        timeline_pan.moved = true;
+        timeline_viewport.classList.add("panning");
+        timeline_viewport.setPointerCapture(event.pointerId);
+    }
+    if (!timeline_pan.active) return;
+    if (Math.abs(delta) > 0) timeline_pan.moved = true;
+    event.preventDefault();
+    timeline_pan.last_x = event.clientX;
+    pan_timeline(-delta);
+});
+function end_timeline_pan(event) {
+    if (event.pointerId !== timeline_pan.pointer_id) return;
+    timeline_pan.suppress_click = timeline_pan.active && timeline_pan.moved;
+    timeline_pan.pointer_id = null;
+    timeline_pan.active = false;
+    timeline_viewport.classList.remove("panning");
+    if (timeline_viewport.hasPointerCapture(event.pointerId))
+        timeline_viewport.releasePointerCapture(event.pointerId);
+}
+timeline_viewport.addEventListener("pointerup", end_timeline_pan);
+timeline_viewport.addEventListener("pointercancel", end_timeline_pan);
+timeline_viewport.addEventListener("wheel", event => {
+    event.preventDefault();
+    if (event.ctrlKey || event.metaKey) {
+        const rect = timeline_viewport.getBoundingClientRect();
+        const x = event.clientX - rect.left -
+            Number.parseFloat(getComputedStyle(timeline_viewport).paddingLeft);
+        set_timeline_zoom(timeline_view.pixels_per_second *
+            (event.deltaY < 0 ? 1.15 : 1 / 1.15), x);
+        return;
+    }
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    pan_timeline(delta);
+}, {passive: false});
+
+window.addEventListener("resize", () => {
+    resize_svg_page();
+    render_timeline();
+});
 
 document.addEventListener("keydown", event => {
     if (event.target === duration_input || event.target.matches("input, textarea, select")) return;
@@ -315,5 +388,14 @@ document.addEventListener("keydown", event => {
     } else if (event.ctrlKey && event.key.toLowerCase() === "d") {
         event.preventDefault();
         create_keyframe();
+    } else if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        set_timeline_zoom(timeline_view.pixels_per_second * 1.5);
+    } else if (event.key === "-") {
+        event.preventDefault();
+        set_timeline_zoom(timeline_view.pixels_per_second / 1.5);
+    } else if (event.key === "Home") {
+        event.preventDefault();
+        fit_timeline();
     }
 });
