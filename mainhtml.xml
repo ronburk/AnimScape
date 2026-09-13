@@ -26,15 +26,15 @@
         #open-svg-dialog form { margin: 0; }
         #open-svg-dialog h2 { margin: 0 0 0.75rem; font-size: 1.25rem; }
         #open-svg-dialog footer { display: flex; justify-content: flex-end; gap: 6px; margin-top: 1rem; }
-        #timeline-viewport { overflow: hidden; padding: 6px 4px; box-sizing: border-box; touch-action: none; cursor: grab; }
+        #timeline-viewport { overflow: hidden; padding: 6px 4px; box-sizing: border-box; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
         #timeline-viewport.panning { cursor: grabbing; }
         #gallery-viewport { overflow-x: auto; padding: 6px 4px; box-sizing: border-box; }
         #timeline-content, #keyframe-list { position: relative; min-width: 100%; }
         #timeline-content { height: 42px; }
         #timeline-track { overflow: hidden; }
         #keyframe-list { height: 96px; }
-        .timeline-axis { position: absolute; top: 0; left: 0; height: 28px; border-bottom: 1px solid #999; pointer-events: none; }
-        .timeline-tick { position: absolute; top: 0; height: 28px; border-left: 1px solid #aaa; color: #555; font-size: 11px; padding-left: 3px; box-sizing: border-box; }
+        .timeline-axis { position: absolute; top: 0; left: 0; height: 28px; border-bottom: 1px solid #999; pointer-events: none; user-select: none; -webkit-user-select: none; }
+        .timeline-tick { position: absolute; top: 0; height: 28px; border-left: 1px solid #aaa; color: #555; font-size: 11px; padding-left: 3px; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         .timeline-marker { position: absolute; top: 18px; width: 10px; height: 10px; padding: 0; border: 0; background: #777; transform: translate(-50%, -50%) rotate(45deg); cursor: pointer; }
         .timeline-marker.selected { background: #d33; }
         .timeline-playhead, .gallery-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #d33; pointer-events: none; z-index: 2; }
