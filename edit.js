@@ -75,8 +75,8 @@ function finish_drag() {
 
 function start_drag(event) {
     if (main_ui.is_history_navigation_busy()) return;
-    const svg = event.target.closest("#svg-viewer > svg");
-    const element = event.target.closest("#svg-viewer > svg *");
+    const svg = event.target.closest("#svg-page > svg");
+    const element = event.target.closest("#svg-page > svg *");
     if (!svg || !element || ["g", "defs", "title", "desc"].includes(element.localName))
         return;
     const attributes = get_drag_attributes(element);
