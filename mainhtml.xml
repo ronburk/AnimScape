@@ -3,16 +3,29 @@
     <head><meta charset="UTF-8"/><title>AnimScape</title><style>
         html, body { height: 100%; margin: 0; }
         body { display: flex; flex-direction: column; overflow: hidden; }
+        #menu-bar { flex: 0 0 34px; display: flex; align-items: center; gap: 4px; padding: 0 8px; box-sizing: border-box; background: #eee; border-bottom: 1px solid #bbb; font: 14px sans-serif; }
+        .menu { position: relative; }
+        .menu-button { padding: 4px 10px; border: 1px solid transparent; background: transparent; font: inherit; }
+        .menu-button[aria-expanded="true"], .menu-button:hover { border-color: #aaa; background: #ddd; }
+        .menu-popup { position: absolute; z-index: 10; top: 100%; left: 0; min-width: 11rem; padding: 4px 0; border: 1px solid #aaa; background: white; box-shadow: 0 3px 8px rgb(0 0 0 / 25%); }
+        .menu-popup[hidden] { display: none; }
+        .menu-popup button { display: block; width: 100%; padding: 5px 12px; border: 0; background: white; text-align: left; font: inherit; white-space: nowrap; }
+        .menu-popup button:hover:not(:disabled), .menu-popup button:focus-visible { background: #def; }
+        .menu-popup button:disabled { color: #888; }
+        #version { margin-left: auto; color: #666; font-size: 12px; }
         #svg-viewer { width: 100%; flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; scrollbar-gutter: stable; background: #d1d1d1; }
         #svg-page { flex: 0 0 auto; box-sizing: border-box; overflow: hidden; background: white; border: 1px solid #555; box-shadow: 0 2px 8px rgb(0 0 0 / 35%); }
         #svg-page > svg { display: block; width: 100%; height: 100%; }
         #keyframe-panel { flex: 0 0 200px; height: 200px; min-height: 200px; max-height: 200px; overflow: hidden; padding: 8px 12px; box-sizing: border-box; background: white; border-top: 1px solid #ccc; font: 14px sans-serif; }
-        #file-controls { flex: 0 0 20vh; min-height: 0; padding: 12px; box-sizing: border-box; }
         #error-dialog { max-width: min(32rem, calc(100vw - 2rem)); border: 2px solid #900; border-radius: 6px; padding: 1rem 1.25rem; }
         #error-dialog::backdrop { background: rgb(0 0 0 / 45%); }
         #error-dialog form { margin: 0; }
         #error-dialog h2 { margin: 0 0 0.75rem; color: #900; font-size: 1.25rem; }
         #error-dialog p { max-width: 28rem; white-space: pre-wrap; }
+        #open-svg-dialog { min-width: min(24rem, calc(100vw - 2rem)); border: 1px solid #888; border-radius: 6px; padding: 1rem 1.25rem; }
+        #open-svg-dialog form { margin: 0; }
+        #open-svg-dialog h2 { margin: 0 0 0.75rem; font-size: 1.25rem; }
+        #open-svg-dialog footer { display: flex; justify-content: flex-end; gap: 6px; margin-top: 1rem; }
         #timeline-viewport, #gallery-viewport { overflow-x: auto; padding: 6px 4px; box-sizing: border-box; }
         #timeline-content, #keyframe-list { position: relative; min-width: 100%; }
         #timeline-content { height: 42px; }
@@ -33,17 +46,31 @@
         #keyframe-controls label { margin-left: 8px; }
     </style></head>
     <body>
-        <div id="svg-viewer"><div id="svg-page" hidden="hidden"></div></div>
-        <div id="file-controls">
-            <button id="svg-file-button" type="button">Open</button>
-            <label id="svg-file-selection" hidden="hidden">SVG file:
-                <select id="svg-file-list"></select>
-            </label>
-            <button id="open-selected-svg-button" type="button" hidden="hidden">Open selected</button>
-            <button id="export-png-button" type="button" disabled="disabled">Export PNG</button>
-            <button id="export-webm-button" type="button" disabled="disabled">Render WebM</button>
+        <nav id="menu-bar" aria-label="Application menu">
+            <div class="menu">
+                <button id="file-menu-button" class="menu-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="file-menu">File</button>
+                <div id="file-menu" class="menu-popup" role="menu" hidden="hidden">
+                    <button type="button" role="menuitem" data-menu-action="open-svg">Open SVG…</button>
+                    <button id="save-svg-button" type="button" role="menuitem" data-menu-action="save-svg" disabled="disabled">Save SVG</button>
+                    <button id="export-png-button" type="button" role="menuitem" data-menu-action="export-png" disabled="disabled">Export PNG</button>
+                    <button id="export-webm-button" type="button" role="menuitem" data-menu-action="export-webm" disabled="disabled">Render WebM</button>
+                </div>
+            </div>
             <span id="version">Version: development</span>
-        </div>
+        </nav>
+        <div id="svg-viewer"><div id="svg-page" hidden="hidden"></div></div>
+        <dialog id="open-svg-dialog">
+            <form method="dialog">
+                <h2>Open SVG</h2>
+                <label id="svg-file-selection" hidden="hidden">SVG file:
+                    <select id="svg-file-list"></select>
+                </label>
+                <footer>
+                    <button id="open-selected-svg-button" type="button" hidden="hidden">Open selected</button>
+                    <button type="submit">Cancel</button>
+                </footer>
+            </form>
+        </dialog>
         <dialog id="error-dialog" aria-labelledby="error-dialog-title" aria-describedby="error-dialog-message">
             <form method="dialog">
                 <h2 id="error-dialog-title">Operation failed</h2>
@@ -77,6 +104,7 @@
         <script type="text/javascript"><xi:include href="history.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="error.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
+        <script type="text/javascript"><xi:include href="menu.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="edit.js" parse="text"/></script>
     </body>
 </html>
