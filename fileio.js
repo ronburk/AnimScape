@@ -83,25 +83,35 @@ window.file_io = (() => {
         }
         if (!workspace_handle) {
             workspace_handle = await window.showDirectoryPicker({mode});
-            await save_workspace(workspace_handle);
         }
 
-        let permission = await workspace_handle.queryPermission({mode});
-        if (permission !== "granted") {
-            permission = await workspace_handle.requestPermission({mode});
-        }
-        if (permission !== "granted") {
-            throw new DOMException("Workspace permission was not granted.",
-                                   "NotAllowedError");
+        try {
+            let permission = await workspace_handle.queryPermission({mode});
+            if (permission !== "granted") {
+                permission = await workspace_handle.requestPermission({mode});
+            }
+            if (permission !== "granted") {
+                throw new DOMException("Workspace permission was not granted.",
+                                       "NotAllowedError");
+            }
+            await save_workspace(workspace_handle);
+        } catch (error) {
+            await forget_workspace();
+            throw error;
         }
     }
 
     async function list_svg_files() {
         await choose_workspace();
         const files = [];
-        for await (const entry of workspace_handle.values()) {
-            if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".svg"))
-                files.push(entry);
+        try {
+            for await (const entry of workspace_handle.values()) {
+                if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".svg"))
+                    files.push(entry);
+            }
+        } catch (error) {
+            await forget_workspace();
+            throw error;
         }
         files.sort((a, b) => a.name.localeCompare(b.name));
         if (files.length === 0) {
