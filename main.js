@@ -1,3 +1,4 @@
+window.main_ui = (() => {
 const save_svg_button = document.getElementById("save-svg-button");
 const export_png_button = document.getElementById("export-png-button");
 const export_webm_button = document.getElementById("export-webm-button");
@@ -21,7 +22,6 @@ const timeline_viewport = document.getElementById("timeline-viewport");
 const timeline_content = document.getElementById("timeline-content");
 const timeline_track = document.getElementById("timeline-track");
 const gallery_viewport = document.getElementById("gallery-viewport");
-const gallery_card_step = 100;
 let svg_document = null;
 let svg_choices = [];
 let history_navigation_busy = false;
@@ -466,3 +466,47 @@ document.addEventListener("keydown", event => {
         fit_timeline();
     }
 });
+function get_svg_document() {
+    return svg_document;
+}
+
+function get_selected_keyframe_index() {
+    return keyframe_ui.selected_index;
+}
+
+function get_keyframe_card(index) {
+    return keyframe_list.querySelectorAll(".keyframe-thumbnail")[index];
+}
+
+function get_timeline_elements() {
+    return timeline_elements;
+}
+
+function is_history_navigation_busy() {
+    return history_navigation_busy;
+}
+
+function refresh_keyframe_state() {
+    keyframe_ui.layers = get_keyframe_layers(parse_svg(svg_document.text));
+}
+
+const timeline_elements = Object.freeze({
+    viewport: timeline_viewport,
+    content: timeline_content,
+    track: timeline_track,
+    gallery_viewport,
+    keyframe_list
+});
+
+return Object.freeze({
+    get_svg_document,
+    get_selected_keyframe_index,
+    get_keyframe_card,
+    get_timeline_elements,
+    is_history_navigation_busy,
+    stop_playback,
+    select_keyframe,
+    record_document_edit,
+    refresh_keyframe_state
+});
+})();
