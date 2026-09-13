@@ -105,6 +105,7 @@ function select_keyframe(index) {
     playback.transition_start = null;
     playback.last_now = null;
     refresh_keyframe_ui();
+    scroll_timeline_to_keyframe(parse_svg(svg_document.text), keyframe_ui.selected_index);
     keyframe_list.querySelectorAll(".keyframe-thumbnail")[keyframe_ui.selected_index].focus();
 }
 
