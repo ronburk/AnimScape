@@ -27,6 +27,7 @@ let svg_choices = [];
 let history_navigation_busy = false;
 const keyframe_ui = { layers: [], selected_index: 0 };
 const timeline_view = { start_time: 0, pixels_per_second: default_timeline_scale };
+const gallery_card_step = 100;
 const playback = {
     running: false,
     frame_index: 0,
@@ -525,7 +526,8 @@ const timeline_elements = Object.freeze({
     content: timeline_content,
     track: timeline_track,
     gallery_viewport,
-    keyframe_list
+    keyframe_list,
+    gallery_card_step
 });
 
 return Object.freeze({
