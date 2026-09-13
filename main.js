@@ -26,6 +26,7 @@ let svg_document = null;
 let svg_choices = [];
 let history_navigation_busy = false;
 const keyframe_ui = { layers: [], selected_index: 0 };
+const timeline_view = { start_time: 0, pixels_per_second: default_timeline_scale };
 const playback = {
     running: false,
     frame_index: 0,
