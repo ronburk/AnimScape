@@ -153,6 +153,16 @@ function get_animation_duration(svg_document) {
     return duration;
 }
 
+function get_keyframe_times(svg_document) {
+    const times = [];
+    let time = 0;
+    get_keyframe_layers(svg_document).forEach((layer, index, layers) => {
+        times.push(time);
+        if (index + 1 < layers.length) time += get_keyframe_duration(layer);
+    });
+    return times;
+}
+
 function get_svg_at_time(svg_document, time) {
     const layers = get_keyframe_layers(svg_document);
     if (layers.length === 0) throw new Error("The SVG has no Inkscape layers.");
@@ -172,12 +182,7 @@ function get_svg_at_time(svg_document, time) {
 
 function render_keyframe_thumbnails(svg_document, selected_index) {
     const layers = get_keyframe_layers(svg_document);
-    const times = [];
-    let time = 0;
-    layers.forEach((layer, index) => {
-        times.push(time);
-        if (index + 1 < layers.length) time += get_keyframe_duration(layer);
-    });
+    const times = get_keyframe_times(svg_document);
     const timeline_width = get_viewport_content_width(timeline_viewport);
     timeline_track.replaceChildren();
     timeline_track.style.position = "relative";
@@ -240,6 +245,24 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
     });
     render_playheads(times[selected_index]);
     update_timeline_zoom_label();
+}
+
+function scroll_timeline_to_keyframe(svg_document, index) {
+    const time = get_keyframe_times(svg_document)[index];
+    if (!Number.isFinite(time)) return;
+    const width = get_viewport_content_width(timeline_viewport);
+    if (width <= 0) return;
+    const margin = 8 / timeline_view.pixels_per_second;
+    const visible_start = timeline_view.start_time;
+    const visible_end = visible_start + width / timeline_view.pixels_per_second;
+    if (time < visible_start + margin) {
+        timeline_view.start_time = Math.max(0, time - margin);
+        render_timeline();
+    } else if (time > visible_end - margin) {
+        timeline_view.start_time = Math.max(0,
+            time - width / timeline_view.pixels_per_second + margin);
+        render_timeline();
+    }
 }
 
 function get_viewport_content_width(viewport) {
