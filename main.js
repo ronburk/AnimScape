@@ -268,14 +268,14 @@ function remove_keyframe() {
 open_selected_svg_button.onclick = open_selected_svg;
 export_png_button.onclick = async () => {
     export_png_button.disabled = true;
-    try { await export_png(); }
+    try { await render_io.export_png(); }
     catch (error) { report_error("Export PNG", "The current image could not be exported as a PNG.", error); }
     finally { export_png_button.disabled = false; }
 };
 export_webm_button.onclick = async () => {
     export_webm_button.disabled = true;
     try {
-        await export_webm({}, {
+        await render_io.export_webm({}, {
             on_progress: progress => {
                 export_webm_button.textContent = "Render WebM " + Math.round(progress * 100) + "%";
             }
