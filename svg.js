@@ -1,8 +1,12 @@
 const inkscape_namespace = "http://www.inkscape.org/namespaces/inkscape";
 const animscape_namespace = "https://animscape.example/ns";
 const default_keyframe_duration = 1.0;
+const default_timeline_scale = 20;
+const min_timeline_scale = 4;
+const max_timeline_scale = 400;
 const xmlns_namespace = "http://www.w3.org/2000/xmlns/";
 const object_id_attribute = "object-id";
+const timeline_view = { start_time: 0, pixels_per_second: default_timeline_scale };
 
 function parse_svg(svg_text) {
     const parsed = new DOMParser().parseFromString(svg_text, "image/svg+xml");
@@ -174,33 +178,39 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         times.push(time);
         if (index + 1 < layers.length) time += get_keyframe_duration(layer);
     });
-    const total_time = Math.max(time, 1);
+    const timeline_width = get_viewport_content_width(timeline_viewport);
     timeline_track.replaceChildren();
     timeline_track.style.position = "relative";
     timeline_track.style.height = "42px";
-    timeline_track.style.width = total_time * timeline_scale + "px";
+    timeline_track.style.width = "100%";
     const axis = document.createElement("div");
     axis.className = "timeline-axis";
-    axis.style.width = total_time * timeline_scale + "px";
-    for (let tick = 0; tick <= Math.ceil(total_time); ++tick) {
+    axis.style.width = "100%";
+    const visible_start = timeline_view.start_time;
+    const visible_end = visible_start + timeline_width / timeline_view.pixels_per_second;
+    const tick_step = get_timeline_tick_step(timeline_view.pixels_per_second);
+    const first_tick = Math.floor(visible_start / tick_step) * tick_step;
+    for (let tick = first_tick; tick <= visible_end + tick_step * 0.001; tick += tick_step) {
+        if (tick < 0) continue;
         const mark = document.createElement("span");
         mark.className = "timeline-tick";
-        mark.style.left = tick * timeline_scale + "px";
-        mark.textContent = tick + "s";
+        mark.style.left = timeline_x_for_time(tick) + "px";
+        mark.textContent = format_timeline_time(tick) + "s";
         axis.append(mark);
     }
     timeline_track.append(axis);
     layers.forEach((layer, index) => {
+        if (times[index] < visible_start - 1 / timeline_view.pixels_per_second ||
+            times[index] > visible_end + 1 / timeline_view.pixels_per_second) return;
         const marker = document.createElement("button");
         marker.type = "button";
         marker.className = "timeline-marker" + (index === selected_index ? " selected" : "");
-        marker.style.left = times[index] * timeline_scale + "px";
+        marker.style.left = timeline_x_for_time(times[index]) + "px";
         marker.title = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
         marker.onclick = event => { event.stopPropagation(); select_keyframe(index); };
         timeline_track.append(marker);
     });
-    const timeline_width = get_viewport_content_width(timeline_viewport);
-    timeline_content.style.width = Math.max(total_time * timeline_scale, timeline_width) + "px";
+    timeline_content.style.width = "100%";
     keyframe_list.replaceChildren(document.getElementById("gallery-playhead"));
     const gallery_width = Math.max(layers.length * gallery_card_step,
         get_viewport_content_width(gallery_viewport));
@@ -229,12 +239,69 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         keyframe_list.append(button);
     });
     render_playheads(times[selected_index]);
+    update_timeline_zoom_label();
 }
 
 function get_viewport_content_width(viewport) {
     const style = getComputedStyle(viewport);
     return Math.max(0, viewport.clientWidth -
         Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight));
+}
+
+function timeline_x_for_time(time) {
+    return (time - timeline_view.start_time) * timeline_view.pixels_per_second;
+}
+
+function get_timeline_tick_step(pixels_per_second) {
+    const minimum_step = 80 / Math.max(1, pixels_per_second);
+    const magnitude = 10 ** Math.floor(Math.log10(minimum_step));
+    for (const factor of [1, 2, 5, 10]) {
+        const step = factor * magnitude;
+        if (step >= minimum_step) return step;
+    }
+    return 10 * magnitude;
+}
+
+function format_timeline_time(time) {
+    if (Math.abs(time) < 1e-9) return "0";
+    return Number(time.toPrecision(6)).toString();
+}
+
+function update_timeline_zoom_label() {
+    const label = document.getElementById("timeline-zoom-label");
+    if (label) label.textContent = format_timeline_time(timeline_view.pixels_per_second) + " px/s";
+}
+
+function render_timeline() {
+    if (!svg_document || keyframe_ui.layers.length === 0) return;
+    render_keyframe_thumbnails(parse_svg(svg_document.text), keyframe_ui.selected_index);
+}
+
+function set_timeline_zoom(pixels_per_second, anchor_x = get_viewport_content_width(timeline_viewport) / 2) {
+    const old_scale = timeline_view.pixels_per_second;
+    const new_scale = Math.max(min_timeline_scale, Math.min(max_timeline_scale, pixels_per_second));
+    if (new_scale === old_scale) return;
+    const anchor_time = timeline_view.start_time + anchor_x / old_scale;
+    timeline_view.pixels_per_second = new_scale;
+    timeline_view.start_time = Math.max(0, anchor_time - anchor_x / new_scale);
+    render_timeline();
+}
+
+function pan_timeline(delta_pixels) {
+    timeline_view.start_time = Math.max(0,
+        timeline_view.start_time + delta_pixels / timeline_view.pixels_per_second);
+    render_timeline();
+}
+
+function fit_timeline() {
+    if (!svg_document) return;
+    const width = get_viewport_content_width(timeline_viewport);
+    const duration = Math.max(1, get_animation_duration(parse_svg(svg_document.text)));
+    timeline_view.start_time = 0;
+    const fit_width = Math.max(1, width - 20);
+    timeline_view.pixels_per_second = Math.max(min_timeline_scale,
+        Math.min(max_timeline_scale, fit_width / duration));
+    render_timeline();
 }
 
 function render_playheads(time) {
@@ -246,7 +313,7 @@ function render_playheads(time) {
         if (index + 1 < keyframe_ui.layers.length) elapsed += get_keyframe_duration(layer);
     });
     const selected = keyframe_ui.selected_index;
-    document.getElementById("timeline-playhead").style.left = time * timeline_scale + "px";
+    document.getElementById("timeline-playhead").style.left = timeline_x_for_time(time) + "px";
     document.getElementById("gallery-playhead").style.left =
         (selected * gallery_card_step + gallery_card_step / 2) + "px";
 }
@@ -323,7 +390,13 @@ function add_keyframe_at_time(svg_text, time) {
         start += duration;
     }
     if (Math.abs(time - start) < 0.001) return {existing_index: layers.length - 1};
-    return {existing_index: layers.length - 1};
+    const current = layers[layers.length - 1];
+    const copy = clone_keyframe_layer(parsed.documentElement, current);
+    copy.setAttribute("id", "animscape-keyframe-" + Date.now());
+    copy.setAttributeNS(inkscape_namespace, "inkscape:label", next_keyframe_label(layers));
+    set_keyframe_duration(current, time - start);
+    current.after(copy);
+    return {text: new XMLSerializer().serializeToString(parsed), index: layers.length};
 }
 
 function next_keyframe_label(layers) {

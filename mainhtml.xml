@@ -26,9 +26,12 @@
         #open-svg-dialog form { margin: 0; }
         #open-svg-dialog h2 { margin: 0 0 0.75rem; font-size: 1.25rem; }
         #open-svg-dialog footer { display: flex; justify-content: flex-end; gap: 6px; margin-top: 1rem; }
-        #timeline-viewport, #gallery-viewport { overflow-x: auto; padding: 6px 4px; box-sizing: border-box; }
+        #timeline-viewport { overflow: hidden; padding: 6px 4px; box-sizing: border-box; touch-action: none; cursor: grab; }
+        #timeline-viewport.panning { cursor: grabbing; }
+        #gallery-viewport { overflow-x: auto; padding: 6px 4px; box-sizing: border-box; }
         #timeline-content, #keyframe-list { position: relative; min-width: 100%; }
         #timeline-content { height: 42px; }
+        #timeline-track { overflow: hidden; }
         #keyframe-list { height: 96px; }
         .timeline-axis { position: absolute; top: 0; left: 0; height: 28px; border-bottom: 1px solid #999; pointer-events: none; }
         .timeline-tick { position: absolute; top: 0; height: 28px; border-left: 1px solid #aaa; color: #555; font-size: 11px; padding-left: 3px; box-sizing: border-box; }
@@ -44,6 +47,7 @@
         .keyframe-thumbnail-duration { display: block; color: #666; font-size: 12px; margin-top: 3px; }
         #keyframe-controls { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
         #keyframe-controls label { margin-left: 8px; }
+        #timeline-zoom-label { min-width: 4.5em; color: #666; text-align: center; }
     </style></head>
     <body>
         <nav id="menu-bar" aria-label="Application menu">
@@ -79,7 +83,7 @@
             </form>
         </dialog>
         <div id="keyframe-panel" hidden="hidden">
-            <div id="timeline-viewport">
+            <div id="timeline-viewport" aria-label="Timeline; drag horizontally to pan, and use the zoom controls or Ctrl-wheel to zoom">
                 <div id="timeline-content">
                     <div id="timeline-track"></div>
                     <div id="timeline-playhead" class="timeline-playhead"></div>
@@ -95,6 +99,12 @@
                 <button id="play-button" type="button">Play</button>
                 <button id="next-keyframe-button" type="button">▶</button>
                 <label>Time to next: <input id="duration-input" type="number" min="0" step="0.1" value="1.0"/></label>
+                <label>Zoom:
+                    <button id="timeline-zoom-out-button" type="button" aria-label="Zoom timeline out">−</button>
+                    <span id="timeline-zoom-label">20 px/s</span>
+                    <button id="timeline-zoom-in-button" type="button" aria-label="Zoom timeline in">+</button>
+                </label>
+                <button id="timeline-fit-button" type="button">Fit</button>
                 <button id="delete-keyframe-button" type="button">Delete Keyframe</button>
             </div>
         </div>
