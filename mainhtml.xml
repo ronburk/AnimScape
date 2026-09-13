@@ -60,6 +60,13 @@
                     <button id="export-webm-button" type="button" role="menuitem" data-menu-action="export-webm" disabled="disabled">Render WebM</button>
                 </div>
             </div>
+            <div class="menu">
+                <button id="edit-menu-button" class="menu-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="edit-menu">Edit</button>
+                <div id="edit-menu" class="menu-popup" role="menu" hidden="hidden">
+                    <button id="undo-button" type="button" role="menuitem" data-menu-action="undo" title="Ctrl+Z" disabled="disabled">Undo</button>
+                    <button id="redo-button" type="button" role="menuitem" data-menu-action="redo" title="Ctrl+Y or Ctrl+Shift+Z" disabled="disabled">Redo</button>
+                </div>
+            </div>
             <span id="version">Version: development</span>
         </nav>
         <div id="svg-viewer"><div id="svg-page" hidden="hidden"></div></div>

@@ -49,7 +49,8 @@ function find_source_object(layer, object_id, element_id) {
 }
 
 function commit_drag() {
-    if (!svg_document || !drag_state.attributes) return;
+    if (!svg_document || !drag_state.attributes ||
+        (drag_state.delta_x === 0 && drag_state.delta_y === 0)) return;
     const parsed = parse_svg(svg_document.text);
     const layer = get_keyframe_layers(parsed)[keyframe_ui.selected_index];
     const source = find_source_object(layer, drag_state.object_id, drag_state.element_id);
@@ -60,7 +61,7 @@ function commit_drag() {
             (drag_state.original_transform ? " " + drag_state.original_transform : "");
     source.setAttribute("transform", transform);
     svg_document.text = new XMLSerializer().serializeToString(parsed);
-    void history_io.record("Move object", svg_document.text);
+    record_document_edit("Move object");
 }
 
 function finish_drag() {
@@ -72,6 +73,7 @@ function finish_drag() {
 }
 
 function start_drag(event) {
+    if (history_navigation_busy) return;
     const svg = event.target.closest("#svg-viewer > svg");
     const element = event.target.closest("#svg-viewer > svg *");
     if (!svg || !element || ["g", "defs", "title", "desc"].includes(element.localName))
@@ -135,7 +137,7 @@ function edit_keyframe_title(index) {
         const value = input.value.trim();
         if (commit && value && value !== label.textContent) {
             svg_document.text = rename_keyframe(svg_document.text, index, value);
-            void history_io.record("Rename keyframe", svg_document.text);
+            record_document_edit("Rename keyframe");
             // Updating the title alone preserves the target of an outside click.
             label.textContent = value;
             keyframe_ui.layers = get_keyframe_layers(parse_svg(svg_document.text));

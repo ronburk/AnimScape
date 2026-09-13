@@ -1,6 +1,8 @@
 const save_svg_button = document.getElementById("save-svg-button");
 const export_png_button = document.getElementById("export-png-button");
 const export_webm_button = document.getElementById("export-webm-button");
+const undo_button = document.getElementById("undo-button");
+const redo_button = document.getElementById("redo-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
 const open_svg_dialog = document.getElementById("open-svg-dialog");
@@ -22,6 +24,7 @@ const gallery_viewport = document.getElementById("gallery-viewport");
 const gallery_card_step = 100;
 let svg_document = null;
 let svg_choices = [];
+let history_navigation_busy = false;
 const keyframe_ui = { layers: [], selected_index: 0 };
 const playback = {
     running: false,
@@ -106,7 +109,7 @@ function select_keyframe(index) {
 }
 
 function change_duration() {
-    if (!svg_document || keyframe_ui.layers.length === 0) return;
+    if (!svg_document || history_navigation_busy || keyframe_ui.layers.length === 0) return;
     const duration = Number.parseFloat(duration_input.value);
     if (!Number.isFinite(duration) || duration < 0) {
         update_duration_input();
@@ -114,11 +117,48 @@ function change_duration() {
     }
     stop_playback();
     const parsed = parse_svg(svg_document.text);
-    set_keyframe_duration(get_keyframe_layers(parsed)[keyframe_ui.selected_index], duration);
+    const layer = get_keyframe_layers(parsed)[keyframe_ui.selected_index];
+    if (get_keyframe_duration(layer) === duration) return;
+    set_keyframe_duration(layer, duration);
     svg_document.text = new XMLSerializer().serializeToString(parsed);
-    void history_io.record("Change keyframe duration", svg_document.text);
+    record_document_edit("Change keyframe duration");
     refresh_keyframe_ui();
 }
+
+function record_document_edit(operation) {
+    void history_io.record(operation, svg_document.text).catch(error =>
+        report_error("History", "The edit could not be added to the history file.", error));
+}
+
+function update_history_menu() {
+    const state = history_io.state();
+    undo_button.disabled = history_navigation_busy || !svg_document || !state.can_undo;
+    redo_button.disabled = history_navigation_busy || !svg_document || !state.can_redo;
+}
+
+async function navigate_history(direction) {
+    const state = history_io.state();
+    if (!svg_document || history_navigation_busy ||
+        !(direction < 0 ? state.can_undo : state.can_redo)) return;
+    stop_playback();
+    history_navigation_busy = true;
+    update_history_menu();
+    try {
+        const text = await (direction < 0 ? history_io.undo() : history_io.redo());
+        if (text !== null) {
+            svg_document.text = text;
+            refresh_keyframe_ui();
+        }
+    } catch (error) {
+        report_error(direction < 0 ? "Undo" : "Redo",
+            "The history state could not be restored.", error);
+    } finally {
+        history_navigation_busy = false;
+        update_history_menu();
+    }
+}
+
+document.addEventListener("history-change", update_history_menu);
 
 function refresh_keyframe_ui() {
     const parsed = parse_svg(svg_document.text);
@@ -143,6 +183,7 @@ function refresh_keyframe_ui() {
 
 function reset_open_controls() {
     svg_document = null;
+    update_history_menu();
     timeline_view.start_time = 0;
     timeline_view.pixels_per_second = default_timeline_scale;
     clear_svg();
@@ -169,6 +210,7 @@ function report_open_error(error) {
 }
 
 async function choose_svg_file() {
+    if (history_navigation_busy) return;
     try {
         svg_choices = await file_io.list_svg_files();
         svg_file_list.replaceChildren();
@@ -188,6 +230,7 @@ async function choose_svg_file() {
 }
 
 async function open_selected_svg() {
+    if (history_navigation_busy) return;
     const file_handle = svg_choices[Number(svg_file_list.value)];
     if (!file_handle) {
         report_error("Open", "Select an SVG file first.");
@@ -201,6 +244,7 @@ async function open_selected_svg() {
         timeline_view.pixels_per_second = default_timeline_scale;
         keyframe_ui.selected_index = 0;
         refresh_keyframe_ui();
+        update_history_menu();
         open_svg_dialog.close();
     } catch (error) {
         report_open_error(error);
@@ -215,6 +259,7 @@ async function save_svg_file() {
 }
 
 function create_keyframe_at_time(time) {
+    if (history_navigation_busy) return;
     stop_playback();
     const old_text = svg_document.text;
     try {
@@ -223,7 +268,7 @@ function create_keyframe_at_time(time) {
             keyframe_ui.selected_index = result.existing_index;
         } else {
             svg_document.text = result.text;
-            void history_io.record("Add keyframe", svg_document.text);
+            record_document_edit("Add keyframe");
             keyframe_ui.selected_index = result.index;
         }
         refresh_keyframe_ui();
@@ -234,12 +279,13 @@ function create_keyframe_at_time(time) {
 }
 
 function create_keyframe() {
+    if (history_navigation_busy) return;
     stop_playback();
     const old_text = svg_document.text;
     const old_index = keyframe_ui.selected_index;
     try {
         svg_document.text = add_keyframe(old_text, old_index);
-        void history_io.record("Duplicate keyframe", svg_document.text);
+        record_document_edit("Duplicate keyframe");
         keyframe_ui.selected_index = old_index + 1;
         refresh_keyframe_ui();
     } catch (error) {
@@ -250,12 +296,13 @@ function create_keyframe() {
 }
 
 function remove_keyframe() {
+    if (history_navigation_busy) return;
     stop_playback();
     const old_text = svg_document.text;
     const old_index = keyframe_ui.selected_index;
     try {
         svg_document.text = delete_keyframe(old_text, old_index);
-        void history_io.record("Delete keyframe", svg_document.text);
+        record_document_edit("Delete keyframe");
         keyframe_ui.selected_index = Math.max(0, old_index - 1);
         refresh_keyframe_ui();
     } catch (error) {
@@ -292,6 +339,8 @@ document.addEventListener("menu-action", event => {
     else if (event.detail === "save-svg") void save_svg_file();
     else if (event.detail === "export-png") export_png_button.click();
     else if (event.detail === "export-webm") export_webm_button.click();
+    else if (event.detail === "undo") void navigate_history(-1);
+    else if (event.detail === "redo") void navigate_history(1);
 });
 delete_keyframe_button.onclick = remove_keyframe;
 previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index - 1);
@@ -373,7 +422,15 @@ window.addEventListener("resize", () => {
 document.addEventListener("keydown", event => {
     if (event.target === duration_input || event.target.matches("input, textarea, select")) return;
     if (!svg_document || keyframe_ui.layers.length === 0) return;
-    if (event.key === "ArrowLeft") {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey &&
+        event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        void navigate_history(event.shiftKey ? 1 : -1);
+    } else if ((event.ctrlKey || event.metaKey) && !event.altKey &&
+               event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        void navigate_history(1);
+    } else if (event.key === "ArrowLeft") {
         event.preventDefault();
         select_keyframe(keyframe_ui.selected_index - 1);
     } else if (event.key === "ArrowRight") {
