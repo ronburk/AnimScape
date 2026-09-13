@@ -38,7 +38,7 @@
         .timeline-marker { position: absolute; top: 18px; width: 10px; height: 10px; padding: 0; border: 0; background: #777; transform: translate(-50%, -50%) rotate(45deg); cursor: pointer; }
         .timeline-marker.selected { background: #d33; }
         .timeline-playhead, .gallery-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #d33; pointer-events: none; z-index: 2; }
-        .keyframe-thumbnail { position: absolute; top: 8px; width: 84px; height: fit-content; padding: 2px; border: 2px solid transparent; border-radius: 4px; background: white; color: #333; transform: translateX(-50%); }
+        .keyframe-thumbnail { position: absolute; top: 8px; width: 84px; height: fit-content; padding: 2px; border: 2px solid transparent; border-radius: 4px; background: white; color: #333; transform: translateX(-50%); cursor: pointer; }
         .keyframe-thumbnail.selected { border-color: #06c; }
         .keyframe-thumbnail.selected::before { content: ""; position: absolute; top: -12px; left: 50%; border: 6px solid transparent; border-top: 0; border-bottom-color: #06c; transform: translateX(-50%); }
         .keyframe-thumbnail svg { display: block; width: 60px; height: 38px; }
@@ -58,13 +58,6 @@
                     <button id="save-svg-button" type="button" role="menuitem" data-menu-action="save-svg" disabled="disabled">Save SVG</button>
                     <button id="export-png-button" type="button" role="menuitem" data-menu-action="export-png" disabled="disabled">Export PNG</button>
                     <button id="export-webm-button" type="button" role="menuitem" data-menu-action="export-webm" disabled="disabled">Render WebM</button>
-                </div>
-            </div>
-            <div class="menu">
-                <button id="edit-menu-button" class="menu-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="edit-menu">Edit</button>
-                <div id="edit-menu" class="menu-popup" role="menu" hidden="hidden">
-                    <button id="undo-button" type="button" role="menuitem" data-menu-action="undo" title="Ctrl+Z" disabled="disabled">Undo</button>
-                    <button id="redo-button" type="button" role="menuitem" data-menu-action="redo" title="Ctrl+Y or Ctrl+Shift+Z" disabled="disabled">Redo</button>
                 </div>
             </div>
             <span id="version">Version: development</span>
