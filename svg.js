@@ -192,7 +192,7 @@ function get_svg_at_time(svg_document, time) {
 
 function render_keyframe_thumbnails(svg_document, selected_index) {
     const elements = get_main_timeline_state();
-    const {viewport, content, track, gallery_viewport, keyframe_list} = elements;
+    const {viewport, content, track, gallery_viewport, keyframe_list, gallery_card_step} = elements;
     const layers = get_keyframe_layers(svg_document);
     const times = get_keyframe_times(svg_document);
     const timeline_view = get_main_timeline_view();
@@ -339,6 +339,7 @@ function fit_timeline() {
 
 function render_playheads(time) {
     const keyframe_ui = get_main_keyframe_state();
+    const gallery_card_step = get_main_timeline_state().gallery_card_step;
     if (!keyframe_ui || keyframe_ui.layers.length === 0) return;
     const times = [];
     let elapsed = 0;
