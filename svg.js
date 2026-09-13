@@ -252,17 +252,11 @@ function scroll_timeline_to_keyframe(svg_document, index) {
     if (!Number.isFinite(time)) return;
     const width = get_viewport_content_width(timeline_viewport);
     if (width <= 0) return;
-    const margin = 8 / timeline_view.pixels_per_second;
-    const visible_start = timeline_view.start_time;
-    const visible_end = visible_start + width / timeline_view.pixels_per_second;
-    if (time < visible_start + margin) {
-        timeline_view.start_time = Math.max(0, time - margin);
-        render_timeline();
-    } else if (time > visible_end - margin) {
-        timeline_view.start_time = Math.max(0,
-            time - width / timeline_view.pixels_per_second + margin);
-        render_timeline();
-    }
+    const centered_start = Math.max(0, time -
+        width / (2 * timeline_view.pixels_per_second));
+    if (centered_start === timeline_view.start_time) return;
+    timeline_view.start_time = centered_start;
+    render_timeline();
 }
 
 function get_viewport_content_width(viewport) {
