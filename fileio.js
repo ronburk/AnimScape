@@ -42,12 +42,18 @@ window.file_io = (() => {
             request.onerror = () => reject(request.error);
             request.onsuccess = () => {
                 const database = request.result;
-                const put = database.transaction(workspace_store_name, "readwrite")
-                    .objectStore(workspace_store_name).put(handle, workspace_key);
+                const transaction = database.transaction(workspace_store_name, "readwrite");
+                const put = transaction.objectStore(workspace_store_name)
+                    .put(handle, workspace_key);
                 put.onerror = () => reject(put.error);
-                put.onsuccess = () => {
+                transaction.oncomplete = () => {
                     database.close();
                     resolve();
+                };
+                transaction.onabort = () => {
+                    database.close();
+                    reject(transaction.error || new DOMException(
+                        "IndexedDB transaction was aborted.", "AbortError"));
                 };
             };
         });
@@ -59,12 +65,18 @@ window.file_io = (() => {
             request.onerror = () => reject(request.error);
             request.onsuccess = () => {
                 const database = request.result;
-                const remove = database.transaction(workspace_store_name, "readwrite")
-                    .objectStore(workspace_store_name).delete(workspace_key);
+                const transaction = database.transaction(workspace_store_name, "readwrite");
+                const remove = transaction.objectStore(workspace_store_name)
+                    .delete(workspace_key);
                 remove.onerror = () => reject(remove.error);
-                remove.onsuccess = () => {
+                transaction.oncomplete = () => {
                     database.close();
                     resolve();
+                };
+                transaction.onabort = () => {
+                    database.close();
+                    reject(transaction.error || new DOMException(
+                        "IndexedDB transaction was aborted.", "AbortError"));
                 };
             };
         });
