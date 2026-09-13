@@ -199,9 +199,11 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         marker.onclick = event => { event.stopPropagation(); select_keyframe(index); };
         timeline_track.append(marker);
     });
-    timeline_content.style.width = Math.max(total_time * timeline_scale, timeline_viewport.clientWidth) + "px";
+    const timeline_width = get_viewport_content_width(timeline_viewport);
+    timeline_content.style.width = Math.max(total_time * timeline_scale, timeline_width) + "px";
     keyframe_list.replaceChildren(document.getElementById("gallery-playhead"));
-    const gallery_width = Math.max(layers.length * gallery_card_step, gallery_viewport.clientWidth);
+    const gallery_width = Math.max(layers.length * gallery_card_step,
+        get_viewport_content_width(gallery_viewport));
     keyframe_list.style.width = gallery_width + "px";
     layers.forEach((layer, index) => {
         const button = document.createElement("button");
@@ -227,6 +229,12 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         keyframe_list.append(button);
     });
     render_playheads(times[selected_index]);
+}
+
+function get_viewport_content_width(viewport) {
+    const style = getComputedStyle(viewport);
+    return Math.max(0, viewport.clientWidth -
+        Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight));
 }
 
 function render_playheads(time) {
