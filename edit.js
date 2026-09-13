@@ -49,10 +49,11 @@ function find_source_object(layer, object_id, element_id) {
 }
 
 function commit_drag() {
-    if (!svg_document || !drag_state.attributes ||
+    const current_document = main_ui.get_svg_document();
+    if (!current_document || !drag_state.attributes ||
         (drag_state.delta_x === 0 && drag_state.delta_y === 0)) return;
-    const parsed = parse_svg(svg_document.text);
-    const layer = get_keyframe_layers(parsed)[keyframe_ui.selected_index];
+    const parsed = parse_svg(current_document.text);
+    const layer = get_keyframe_layers(parsed)[main_ui.get_selected_keyframe_index()];
     const source = find_source_object(layer, drag_state.object_id, drag_state.element_id);
     if (!source) return;
     const transform = drag_state.delta_x === 0 && drag_state.delta_y === 0
@@ -60,8 +61,8 @@ function commit_drag() {
         : "translate(" + drag_state.delta_x + " " + drag_state.delta_y + ")" +
             (drag_state.original_transform ? " " + drag_state.original_transform : "");
     source.setAttribute("transform", transform);
-    svg_document.text = new XMLSerializer().serializeToString(parsed);
-    record_document_edit("Move object");
+    current_document.text = new XMLSerializer().serializeToString(parsed);
+    main_ui.record_document_edit("Move object");
 }
 
 function finish_drag() {
@@ -73,14 +74,14 @@ function finish_drag() {
 }
 
 function start_drag(event) {
-    if (history_navigation_busy) return;
+    if (main_ui.is_history_navigation_busy()) return;
     const svg = event.target.closest("#svg-viewer > svg");
     const element = event.target.closest("#svg-viewer > svg *");
     if (!svg || !element || ["g", "defs", "title", "desc"].includes(element.localName))
         return;
     const attributes = get_drag_attributes(element);
     if (!attributes) return;
-    stop_playback();
+    main_ui.stop_playback();
     drag_state.element = element;
     drag_state.pointer_id = event.pointerId;
     drag_state.start_x = event.clientX;
@@ -118,8 +119,8 @@ function cancel_title_hold() {
 }
 
 function edit_keyframe_title(index) {
-    select_keyframe(index);
-    const card = keyframe_list.querySelectorAll(".keyframe-thumbnail")[index];
+    main_ui.select_keyframe(index);
+    const card = main_ui.get_keyframe_card(index);
     const label = card.querySelector(".keyframe-thumbnail-label");
     const rect = label.getBoundingClientRect();
     const input = document.createElement("input");
@@ -136,11 +137,12 @@ function edit_keyframe_title(index) {
         finished = true;
         const value = input.value.trim();
         if (commit && value && value !== label.textContent) {
-            svg_document.text = rename_keyframe(svg_document.text, index, value);
-            record_document_edit("Rename keyframe");
+            const current_document = main_ui.get_svg_document();
+            current_document.text = rename_keyframe(current_document.text, index, value);
+            main_ui.record_document_edit("Rename keyframe");
             // Updating the title alone preserves the target of an outside click.
             label.textContent = value;
-            keyframe_ui.layers = get_keyframe_layers(parse_svg(svg_document.text));
+            main_ui.refresh_keyframe_state();
         }
         input.remove();
         if (focus) card.focus();
