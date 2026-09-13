@@ -1,5 +1,7 @@
+window.render_io = (() => {
+
 function get_export_svg() {
-    const svg = document.querySelector("#svg-viewer > svg");
+    const svg = document.querySelector("#svg-page > svg");
     if (!svg) throw new Error("There is no SVG to export.");
     return svg;
 }
@@ -184,3 +186,9 @@ async function export_png() {
     link.click();
     URL.revokeObjectURL(download_url);
 }
+
+return Object.freeze({
+    export_png,
+    export_webm
+});
+})();
