@@ -3,8 +3,7 @@ const animscape_namespace = "https://animscape.example/ns";
 const default_keyframe_duration = 1.0;
 const default_timeline_scale = 20;
 const min_timeline_scale = 4;
-const max_timeline_scale = 4000;
-const gallery_card_step = 100;
+const max_timeline_scale = 400;
 const xmlns_namespace = "http://www.w3.org/2000/xmlns/";
 const object_id_attribute = "object-id";
 const timeline_view = { start_time: 0, pixels_per_second: default_timeline_scale };
@@ -182,13 +181,6 @@ function get_svg_at_time(svg_document, time) {
 }
 
 function render_keyframe_thumbnails(svg_document, selected_index) {
-    const {
-        viewport: timeline_viewport,
-        content: timeline_content,
-        track: timeline_track,
-        gallery_viewport,
-        keyframe_list
-    } = main_ui.get_timeline_elements();
     const layers = get_keyframe_layers(svg_document);
     const times = get_keyframe_times(svg_document);
     const timeline_width = get_viewport_content_width(timeline_viewport);
@@ -203,18 +195,6 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
     const visible_end = visible_start + timeline_width / timeline_view.pixels_per_second;
     const tick_step = get_timeline_tick_step(timeline_view.pixels_per_second);
     const first_tick = Math.floor(visible_start / tick_step) * tick_step;
-    const minor_step = tick_step / 5;
-    const first_minor_tick = Math.floor(visible_start / minor_step) * minor_step;
-    for (let tick = first_minor_tick;
-         tick <= visible_end + minor_step * 0.001;
-         tick += minor_step) {
-        if (tick < 0 || Math.abs(tick / tick_step - Math.round(tick / tick_step)) < 1e-9)
-            continue;
-        const minor_mark = document.createElement("span");
-        minor_mark.className = "timeline-tick minor";
-        minor_mark.style.left = timeline_x_for_time(tick) + "px";
-        axis.append(minor_mark);
-    }
     for (let tick = first_tick; tick <= visible_end + tick_step * 0.001; tick += tick_step) {
         if (tick < 0) continue;
         const mark = document.createElement("span");
@@ -232,7 +212,7 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         marker.className = "timeline-marker" + (index === selected_index ? " selected" : "");
         marker.style.left = timeline_x_for_time(times[index]) + "px";
         marker.title = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
-        marker.onclick = event => { event.stopPropagation(); main_ui.select_keyframe(index); };
+        marker.onclick = event => { event.stopPropagation(); select_keyframe(index); };
         timeline_track.append(marker);
     });
     timeline_content.style.width = "100%";
@@ -248,27 +228,18 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
         button.className = "keyframe-thumbnail" + (index === selected_index ? " selected" : "");
         const copy = svg_document.documentElement.cloneNode(true);
         hide_other_layers(copy, index);
-        copy.setAttribute("width", "60");
-        copy.setAttribute("height", "38");
+        copy.setAttribute("width", "76");
+        copy.setAttribute("height", "44");
         copy.setAttribute("preserveAspectRatio", "xMidYMid meet");
         button.append(document.importNode(copy, true));
-        const label = document.createElement("span");
-        label.className = "keyframe-thumbnail-label";
-        label.textContent = layer.getAttributeNS(inkscape_namespace, "label") || "Keyframe " + (index + 1);
-        button.append(label);
-        const duration = document.createElement("span");
-        duration.className = "keyframe-thumbnail-duration";
-        duration.textContent = index + 1 < layers.length ? get_keyframe_duration(layer) + "s" : "end";
-        button.append(duration);
-        button.onclick = () => main_ui.select_keyframe(index);
+        button.onclick = () => select_keyframe(index);
         keyframe_list.append(button);
     });
-    render_playheads(times[selected_index], selected_index);
+    render_playheads(times[selected_index]);
     update_timeline_zoom_label();
 }
 
 function scroll_timeline_to_keyframe(svg_document, index) {
-    const {viewport: timeline_viewport} = main_ui.get_timeline_elements();
     const time = get_keyframe_times(svg_document)[index];
     if (!Number.isFinite(time)) return;
     const width = get_viewport_content_width(timeline_viewport);
@@ -311,16 +282,11 @@ function update_timeline_zoom_label() {
 }
 
 function render_timeline() {
-    const current_document = main_ui.get_svg_document();
-    if (!current_document) return;
-    const parsed = parse_svg(current_document.text);
-    if (get_keyframe_layers(parsed).length === 0) return;
-    render_keyframe_thumbnails(parsed, main_ui.get_selected_keyframe_index());
+    if (!svg_document || keyframe_ui.layers.length === 0) return;
+    render_keyframe_thumbnails(parse_svg(svg_document.text), keyframe_ui.selected_index);
 }
 
-function set_timeline_zoom(pixels_per_second, anchor_x) {
-    const {viewport: timeline_viewport} = main_ui.get_timeline_elements();
-    if (anchor_x === undefined) anchor_x = get_viewport_content_width(timeline_viewport) / 2;
+function set_timeline_zoom(pixels_per_second, anchor_x = get_viewport_content_width(timeline_viewport) / 2) {
     const old_scale = timeline_view.pixels_per_second;
     const new_scale = Math.max(min_timeline_scale, Math.min(max_timeline_scale, pixels_per_second));
     if (new_scale === old_scale) return;
@@ -337,11 +303,9 @@ function pan_timeline(delta_pixels) {
 }
 
 function fit_timeline() {
-    const current_document = main_ui.get_svg_document();
-    if (!current_document) return;
-    const {viewport: timeline_viewport} = main_ui.get_timeline_elements();
+    if (!svg_document) return;
     const width = get_viewport_content_width(timeline_viewport);
-    const duration = Math.max(1, get_animation_duration(parse_svg(current_document.text)));
+    const duration = Math.max(1, get_animation_duration(parse_svg(svg_document.text)));
     timeline_view.start_time = 0;
     const fit_width = Math.max(1, width - 20);
     timeline_view.pixels_per_second = Math.max(min_timeline_scale,
@@ -349,7 +313,15 @@ function fit_timeline() {
     render_timeline();
 }
 
-function render_playheads(time, selected) {
+function render_playheads(time) {
+    if (!keyframe_ui || keyframe_ui.layers.length === 0) return;
+    const times = [];
+    let elapsed = 0;
+    keyframe_ui.layers.forEach((layer, index) => {
+        times.push(elapsed);
+        if (index + 1 < keyframe_ui.layers.length) elapsed += get_keyframe_duration(layer);
+    });
+    const selected = keyframe_ui.selected_index;
     document.getElementById("timeline-playhead").style.left = timeline_x_for_time(time) + "px";
     document.getElementById("gallery-playhead").style.left =
         (selected * gallery_card_step + gallery_card_step / 2) + "px";
@@ -386,176 +358,3 @@ function clone_keyframe_layer(svg, source) {
                 (match, id) => id_map.has(id) ? "url(#" + id_map.get(id) + ")" : match);
             value = value.replace(/^#(.+)$/, (match, id) =>
                 id_map.has(id) ? "#" + id_map.get(id) : match);
-            if (value !== attribute.value) element.setAttribute(attribute.name, value);
-        });
-    });
-    return copy;
-}
-
-function add_keyframe_at_time(svg_text, time) {
-    const parsed = parse_svg(svg_text);
-    ensure_animscape_object_ids(parsed.documentElement);
-    const layers = get_keyframe_layers(parsed);
-    let start = 0;
-    for (let index = 0; index < layers.length; ++index) {
-        const duration = index + 1 < layers.length ? get_keyframe_duration(layers[index]) : 0;
-        if (Math.abs(time - start) < 0.001) return {existing_index: index};
-        if (index + 1 < layers.length && time < start + duration) {
-            const next_time = start + duration;
-            const progress = duration === 0 ? 0 : (time - start) / duration;
-            const current = layers[index];
-            const next = layers[index + 1];
-            const copy = clone_keyframe_layer(parsed.documentElement, current);
-            const current_objects = new Map(get_animscape_objects(current)
-                .map(element => [get_animscape_object_id(element), element]));
-            const next_objects = new Map(get_animscape_objects(next)
-                .map(element => [get_animscape_object_id(element), element]));
-            const copy_objects = new Map(get_animscape_objects(copy)
-                .map(element => [get_animscape_object_id(element), element]));
-            current_objects.forEach((source, object_id) => {
-                const target = next_objects.get(object_id);
-                const output = copy_objects.get(object_id);
-                if (target && output) interpolate_animscape_object(output, target, progress);
-            });
-            copy.setAttribute("id", "animscape-keyframe-" + Date.now());
-            copy.setAttributeNS(inkscape_namespace, "inkscape:label", next_keyframe_label(layers));
-            set_keyframe_duration(current, time - start);
-            set_keyframe_duration(copy, next_time - time);
-            current.after(copy);
-            return {text: new XMLSerializer().serializeToString(parsed), index: index + 1};
-        }
-        start += duration;
-    }
-    if (Math.abs(time - start) < 0.001) return {existing_index: layers.length - 1};
-    const current = layers[layers.length - 1];
-    const copy = clone_keyframe_layer(parsed.documentElement, current);
-    copy.setAttribute("id", "animscape-keyframe-" + Date.now());
-    copy.setAttributeNS(inkscape_namespace, "inkscape:label", next_keyframe_label(layers));
-    set_keyframe_duration(current, time - start);
-    current.after(copy);
-    return {text: new XMLSerializer().serializeToString(parsed), index: layers.length};
-}
-
-function next_keyframe_label(layers) {
-    let number = 0;
-    layers.forEach(layer => {
-        const match = /^Keyframe ([0-9]+)$/.exec(
-            layer.getAttributeNS(inkscape_namespace, "label") || "");
-        if (match) number = Math.max(number, Number(match[1]));
-    });
-    return "Keyframe " + (number + 1);
-}
-
-function rename_keyframe(svg_text, index, label) {
-    const parsed = parse_svg(svg_text);
-    get_keyframe_layers(parsed)[index].setAttributeNS(inkscape_namespace, "inkscape:label", label);
-    return new XMLSerializer().serializeToString(parsed);
-}
-
-function get_svg_aspect_ratio(svg_root) {
-    const view_box = (svg_root.getAttribute("viewBox") || "")
-        .trim().split(/[\s,]+/).map(Number);
-    if (view_box.length === 4 && view_box[2] > 0 && view_box[3] > 0)
-        return view_box[2] / view_box[3];
-
-    const width = Number.parseFloat(svg_root.getAttribute("width"));
-    const height = Number.parseFloat(svg_root.getAttribute("height"));
-    return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0
-        ? width / height
-        : 1;
-}
-
-function resize_svg_page() {
-    const svg_viewer = document.getElementById("svg-viewer");
-    const svg_page = document.getElementById("svg-page");
-    if (svg_page.hidden || !svg_page.firstElementChild) return;
-
-    const viewer_style = getComputedStyle(svg_viewer);
-    const horizontal_padding = parseFloat(viewer_style.paddingLeft) +
-        parseFloat(viewer_style.paddingRight);
-    const vertical_padding = parseFloat(viewer_style.paddingTop) +
-        parseFloat(viewer_style.paddingBottom);
-    const available_width = Math.max(1, svg_viewer.clientWidth - horizontal_padding);
-    const available_height = Math.max(1, svg_viewer.clientHeight - vertical_padding);
-    const aspect_ratio = Number(svg_page.dataset.aspectRatio);
-    const page_width = Math.floor(Math.min(available_width, available_height * aspect_ratio));
-    const page_height = Math.floor(page_width / aspect_ratio);
-    svg_page.style.width = Math.max(1, page_width) + "px";
-    svg_page.style.height = Math.max(1, page_height) + "px";
-}
-
-function draw_svg(svg_text) {
-    const parsed = parse_svg(svg_text);
-    const svg_page = document.getElementById("svg-page");
-    svg_page.dataset.aspectRatio = String(get_svg_aspect_ratio(parsed.documentElement));
-    svg_page.replaceChildren(document.importNode(parsed.documentElement, true));
-    svg_page.hidden = false;
-    resize_svg_page();
-}
-
-function clear_svg() {
-    const svg_page = document.getElementById("svg-page");
-    svg_page.replaceChildren();
-    svg_page.hidden = true;
-}
-
-window.addEventListener("resize", resize_svg_page);
-
-function add_keyframe(svg_text, selected_index) {
-    const parsed = parse_svg(svg_text);
-    const svg = parsed.documentElement;
-    const layers = get_keyframe_layers(parsed);
-    if (layers.length === 0) throw new Error("The SVG has no Inkscape layers.");
-    if (!svg.hasAttributeNS(xmlns_namespace, "animscape"))
-        svg.setAttributeNS(xmlns_namespace, "xmlns:animscape", animscape_namespace);
-    const source = layers[selected_index];
-    if (!source) throw new Error("Invalid keyframe selection.");
-    const used_object_ids = new Set(get_animscape_objects(svg).map(get_animscape_object_id));
-    let next_object_number = 1;
-    get_animscape_objects(svg).forEach(element => {
-        if (get_animscape_object_id(element)) return;
-        let object_id;
-        do { object_id = "object-" + next_object_number++; }
-        while (used_object_ids.has(object_id));
-        element.setAttributeNS(animscape_namespace, "animscape:object-id", object_id);
-        used_object_ids.add(object_id);
-    });
-    const copy = source.cloneNode(true);
-    let number = layers.length + 1;
-    let layer_id;
-    const used_ids = new Set(Array.from(svg.querySelectorAll("[id]")).map(element => element.id));
-    do { layer_id = "animscape-keyframe-" + number++; }
-    while (used_ids.has(layer_id));
-    copy.setAttribute("id", layer_id);
-    const id_map = new Map();
-    copy.querySelectorAll("[id]").forEach(element => {
-        const old_id = element.id;
-        let new_id = old_id + "-copy";
-        let copy_number = 2;
-        while (used_ids.has(new_id)) new_id = old_id + "-copy-" + copy_number++;
-        id_map.set(old_id, new_id);
-        element.setAttribute("id", new_id);
-        used_ids.add(new_id);
-    });
-    copy.querySelectorAll("*").forEach(element => {
-        Array.from(element.attributes).forEach(attribute => {
-            let value = attribute.value.replace(/url\(#([^)]*)\)/g,
-                (match, id) => id_map.has(id) ? "url(#" + id_map.get(id) + ")" : match);
-            value = value.replace(/^#(.+)$/, (match, id) =>
-                id_map.has(id) ? "#" + id_map.get(id) : match);
-            if (value !== attribute.value) element.setAttribute(attribute.name, value);
-        });
-    });
-    copy.setAttributeNS(inkscape_namespace, "inkscape:label", next_keyframe_label(layers));
-    source.after(copy);
-    return new XMLSerializer().serializeToString(parsed);
-}
-
-function delete_keyframe(svg_text, selected_index) {
-    const parsed = parse_svg(svg_text);
-    const layers = get_keyframe_layers(parsed);
-    if (layers.length <= 1) throw new Error("Cannot delete the only keyframe.");
-    if (!layers[selected_index]) throw new Error("Invalid keyframe selection.");
-    layers[selected_index].remove();
-    return new XMLSerializer().serializeToString(parsed);
-}
