@@ -334,10 +334,54 @@ function rename_keyframe(svg_text, index, label) {
     return new XMLSerializer().serializeToString(parsed);
 }
 
+function get_svg_aspect_ratio(svg_root) {
+    const view_box = (svg_root.getAttribute("viewBox") || "")
+        .trim().split(/[\s,]+/).map(Number);
+    if (view_box.length === 4 && view_box[2] > 0 && view_box[3] > 0)
+        return view_box[2] / view_box[3];
+
+    const width = Number.parseFloat(svg_root.getAttribute("width"));
+    const height = Number.parseFloat(svg_root.getAttribute("height"));
+    return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0
+        ? width / height
+        : 1;
+}
+
+function resize_svg_page() {
+    const svg_viewer = document.getElementById("svg-viewer");
+    const svg_page = document.getElementById("svg-page");
+    if (svg_page.hidden || !svg_page.firstElementChild) return;
+
+    const viewer_style = getComputedStyle(svg_viewer);
+    const horizontal_padding = parseFloat(viewer_style.paddingLeft) +
+        parseFloat(viewer_style.paddingRight);
+    const vertical_padding = parseFloat(viewer_style.paddingTop) +
+        parseFloat(viewer_style.paddingBottom);
+    const available_width = Math.max(1, svg_viewer.clientWidth - horizontal_padding);
+    const available_height = Math.max(1, svg_viewer.clientHeight - vertical_padding);
+    const aspect_ratio = Number(svg_page.dataset.aspectRatio);
+    const page_width = Math.floor(Math.min(available_width, available_height * aspect_ratio));
+    const page_height = Math.floor(page_width / aspect_ratio);
+    svg_page.style.width = Math.max(1, page_width) + "px";
+    svg_page.style.height = Math.max(1, page_height) + "px";
+}
+
 function draw_svg(svg_text) {
     const parsed = parse_svg(svg_text);
-    document.getElementById("svg-viewer").replaceChildren(document.importNode(parsed.documentElement, true));
+    const svg_page = document.getElementById("svg-page");
+    svg_page.dataset.aspectRatio = String(get_svg_aspect_ratio(parsed.documentElement));
+    svg_page.replaceChildren(document.importNode(parsed.documentElement, true));
+    svg_page.hidden = false;
+    resize_svg_page();
 }
+
+function clear_svg() {
+    const svg_page = document.getElementById("svg-page");
+    svg_page.replaceChildren();
+    svg_page.hidden = true;
+}
+
+window.addEventListener("resize", resize_svg_page);
 
 function add_keyframe(svg_text, selected_index) {
     const parsed = parse_svg(svg_text);
