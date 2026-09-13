@@ -3,7 +3,7 @@ const animscape_namespace = "https://animscape.example/ns";
 const default_keyframe_duration = 1.0;
 const default_timeline_scale = 20;
 const min_timeline_scale = 4;
-const max_timeline_scale = 400;
+const max_timeline_scale = 4000;
 const xmlns_namespace = "http://www.w3.org/2000/xmlns/";
 const object_id_attribute = "object-id";
 const timeline_view = { start_time: 0, pixels_per_second: default_timeline_scale };
@@ -195,6 +195,18 @@ function render_keyframe_thumbnails(svg_document, selected_index) {
     const visible_end = visible_start + timeline_width / timeline_view.pixels_per_second;
     const tick_step = get_timeline_tick_step(timeline_view.pixels_per_second);
     const first_tick = Math.floor(visible_start / tick_step) * tick_step;
+    const minor_step = tick_step / 5;
+    const first_minor_tick = Math.floor(visible_start / minor_step) * minor_step;
+    for (let tick = first_minor_tick;
+         tick <= visible_end + minor_step * 0.001;
+         tick += minor_step) {
+        if (tick < 0 || Math.abs(tick / tick_step - Math.round(tick / tick_step)) < 1e-9)
+            continue;
+        const minor_mark = document.createElement("span");
+        minor_mark.className = "timeline-tick minor";
+        minor_mark.style.left = timeline_x_for_time(tick) + "px";
+        axis.append(minor_mark);
+    }
     for (let tick = first_tick; tick <= visible_end + tick_step * 0.001; tick += tick_step) {
         if (tick < 0) continue;
         const mark = document.createElement("span");
