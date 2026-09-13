@@ -38,7 +38,7 @@
         .timeline-marker { position: absolute; top: 18px; width: 10px; height: 10px; padding: 0; border: 0; background: #777; transform: translate(-50%, -50%) rotate(45deg); cursor: pointer; }
         .timeline-marker.selected { background: #d33; }
         .timeline-playhead, .gallery-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #d33; pointer-events: none; z-index: 2; }
-        .keyframe-thumbnail { position: absolute; top: 8px; width: 84px; height: fit-content; padding: 2px; border: 2px solid transparent; border-radius: 4px; background: white; color: #333; transform: translateX(-50%); }
+        .keyframe-thumbnail { position: absolute; top: 8px; width: 84px; height: fit-content; padding: 2px; border: 2px solid transparent; border-radius: 4px; background: white; color: #333; transform: translateX(-50%); cursor: pointer; }
         .keyframe-thumbnail.selected { border-color: #06c; }
         .keyframe-thumbnail.selected::before { content: ""; position: absolute; top: -12px; left: 50%; border: 6px solid transparent; border-top: 0; border-bottom-color: #06c; transform: translateX(-50%); }
         .keyframe-thumbnail svg { display: block; width: 60px; height: 38px; }
