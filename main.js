@@ -140,10 +140,12 @@ function refresh_keyframe_ui() {
     export_png_button.disabled = false;
     export_webm_button.disabled = false;
     file_controls.hidden = true;
+    resize_svg_page();
 }
 
 function reset_open_controls() {
     svg_document = null;
+    clear_svg();
     keyframe_panel.hidden = true;
     file_controls.append(svg_file_button);
     file_controls.append(export_png_button);
