@@ -306,7 +306,9 @@ function render_timeline() {
 
 function set_timeline_zoom(pixels_per_second, anchor_x) {
     const timeline_view = get_main_timeline_view();
-    if (anchor_x === undefined)
+    if (anchor_x === undefined && timeline_view.start_time === 0)
+        anchor_x = 0;
+    else if (anchor_x === undefined)
         anchor_x = get_viewport_content_width(get_main_timeline_state().viewport) / 2;
     const old_scale = timeline_view.pixels_per_second;
     const new_scale = Math.max(min_timeline_scale, Math.min(max_timeline_scale, pixels_per_second));
