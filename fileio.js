@@ -62,6 +62,9 @@ window.file_io = (() => {
     function delete_saved_workspace() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(workspace_database_name, 1);
+            request.onupgradeneeded = () => {
+                request.result.createObjectStore(workspace_store_name);
+            };
             request.onerror = () => reject(request.error);
             request.onsuccess = () => {
                 const database = request.result;
@@ -143,6 +146,11 @@ window.file_io = (() => {
         return files;
     }
 
+    async function open_directory() {
+        await forget_workspace();
+        return list_svg_files();
+    }
+
     async function open_svg(file_handle) {
         if (!file_handle || file_handle.kind !== "file")
             throw new TypeError("open_svg() requires an SVG file handle.");
@@ -210,6 +218,7 @@ window.file_io = (() => {
     }
 
     return Object.freeze({
+        open_directory: open_directory,
         list_svg_files: list_svg_files,
         open_svg: open_svg,
         save_svg: save_svg,

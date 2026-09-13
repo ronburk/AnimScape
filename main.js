@@ -239,6 +239,26 @@ async function choose_svg_file() {
     }
 }
 
+async function choose_svg_directory() {
+    if (history_navigation_busy) return;
+    try {
+        svg_choices = await file_io.open_directory();
+        svg_file_list.replaceChildren();
+        svg_choices.forEach((file_handle, index) => {
+            const option = document.createElement("option");
+            option.value = String(index);
+            option.textContent = file_handle.name;
+            svg_file_list.append(option);
+        });
+        svg_file_selection.hidden = false;
+        open_selected_svg_button.hidden = false;
+        open_svg_dialog.showModal();
+        svg_file_list.focus();
+    } catch (error) {
+        report_open_error(error);
+    }
+}
+
 async function open_selected_svg() {
     if (history_navigation_busy) return;
     const file_handle = svg_choices[Number(svg_file_list.value)];
@@ -346,6 +366,7 @@ export_webm_button.onclick = async () => {
 };
 document.addEventListener("menu-action", event => {
     if (event.detail === "open-svg") void choose_svg_file();
+    else if (event.detail === "open-directory") void choose_svg_directory();
     else if (event.detail === "save-svg") void save_svg_file();
     else if (event.detail === "export-png") export_png_button.click();
     else if (event.detail === "export-webm") export_webm_button.click();

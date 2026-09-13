@@ -54,6 +54,7 @@
                 <button id="file-menu-button" class="menu-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="file-menu">File</button>
                 <div id="file-menu" class="menu-popup" role="menu" hidden="hidden">
                     <button type="button" role="menuitem" data-menu-action="open-svg">Open SVG…</button>
+                    <button type="button" role="menuitem" data-menu-action="open-directory">Open directory…</button>
                     <button id="save-svg-button" type="button" role="menuitem" data-menu-action="save-svg" disabled="disabled">Save SVG</button>
                     <button id="export-png-button" type="button" role="menuitem" data-menu-action="export-png" disabled="disabled">Export PNG</button>
                     <button id="export-webm-button" type="button" role="menuitem" data-menu-action="export-webm" disabled="disabled">Render WebM</button>
