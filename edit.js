@@ -1,3 +1,4 @@
+(() => {
 const drag_state = {
     element: null,
     start_x: 0,
@@ -188,3 +189,4 @@ document.addEventListener("click", event => {
     event.preventDefault();
     event.stopImmediatePropagation();
 }, true);
+})();
