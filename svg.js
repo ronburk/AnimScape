@@ -304,7 +304,10 @@ function render_timeline() {
     render_keyframe_thumbnails(parse_svg(svg_document.text), keyframe_ui.selected_index);
 }
 
-function set_timeline_zoom(pixels_per_second, anchor_x = get_viewport_content_width(timeline_viewport) / 2) {
+function set_timeline_zoom(pixels_per_second, anchor_x) {
+    const timeline_view = get_main_timeline_view();
+    if (anchor_x === undefined)
+        anchor_x = get_viewport_content_width(get_main_timeline_state().viewport) / 2;
     const old_scale = timeline_view.pixels_per_second;
     const new_scale = Math.max(min_timeline_scale, Math.min(max_timeline_scale, pixels_per_second));
     if (new_scale === old_scale) return;
@@ -322,8 +325,10 @@ function pan_timeline(delta_pixels) {
 }
 
 function fit_timeline() {
+    const svg_document = main_ui.get_svg_document();
+    const timeline_view = get_main_timeline_view();
     if (!svg_document) return;
-    const width = get_viewport_content_width(timeline_viewport);
+    const width = get_viewport_content_width(get_main_timeline_state().viewport);
     const duration = Math.max(1, get_animation_duration(parse_svg(svg_document.text)));
     timeline_view.start_time = 0;
     const fit_width = Math.max(1, width - 20);
