@@ -1,14 +1,13 @@
-const svg_file_button = document.getElementById("svg-file-button");
+const save_svg_button = document.getElementById("save-svg-button");
 const export_png_button = document.getElementById("export-png-button");
 const export_webm_button = document.getElementById("export-webm-button");
 const delete_keyframe_button = document.getElementById("delete-keyframe-button");
 const keyframe_panel = document.getElementById("keyframe-panel");
-const file_controls = document.getElementById("file-controls");
+const open_svg_dialog = document.getElementById("open-svg-dialog");
 const svg_file_selection = document.getElementById("svg-file-selection");
 const svg_file_list = document.getElementById("svg-file-list");
 const open_selected_svg_button = document.getElementById("open-selected-svg-button");
 const keyframe_list = document.getElementById("keyframe-list");
-const keyframe_controls = document.getElementById("keyframe-controls");
 const previous_keyframe_button = document.getElementById("previous-keyframe-button");
 const play_button = document.getElementById("play-button");
 const next_keyframe_button = document.getElementById("next-keyframe-button");
@@ -134,12 +133,9 @@ function refresh_keyframe_ui() {
     update_duration_input();
     delete_keyframe_button.disabled = keyframe_ui.layers.length <= 1;
     keyframe_panel.hidden = false;
-    keyframe_controls.append(svg_file_button);
-    keyframe_controls.append(export_png_button);
-    keyframe_controls.append(export_webm_button);
+    save_svg_button.disabled = false;
     export_png_button.disabled = false;
     export_webm_button.disabled = false;
-    file_controls.hidden = true;
     resize_svg_page();
 }
 
@@ -147,17 +143,13 @@ function reset_open_controls() {
     svg_document = null;
     clear_svg();
     keyframe_panel.hidden = true;
-    file_controls.append(svg_file_button);
-    file_controls.append(export_png_button);
-    file_controls.append(export_webm_button);
+    if (open_svg_dialog.open) open_svg_dialog.close();
+    save_svg_button.disabled = true;
     export_png_button.disabled = true;
     export_webm_button.disabled = true;
-    svg_file_button.textContent = "Open";
-    svg_file_button.onclick = choose_svg_file;
     svg_file_selection.hidden = true;
     open_selected_svg_button.hidden = true;
     svg_choices = [];
-    file_controls.hidden = false;
 }
 
 function report_open_error(error) {
@@ -184,6 +176,7 @@ async function choose_svg_file() {
         });
         svg_file_selection.hidden = false;
         open_selected_svg_button.hidden = false;
+        open_svg_dialog.showModal();
         svg_file_list.focus();
     } catch (error) {
         report_open_error(error);
@@ -202,8 +195,7 @@ async function open_selected_svg() {
         await history_io.open(opened);
         keyframe_ui.selected_index = 0;
         refresh_keyframe_ui();
-        svg_file_button.textContent = "Save";
-        svg_file_button.onclick = save_svg_file;
+        open_svg_dialog.close();
     } catch (error) {
         report_open_error(error);
     }
@@ -267,7 +259,6 @@ function remove_keyframe() {
     }
 }
 
-svg_file_button.onclick = choose_svg_file;
 open_selected_svg_button.onclick = open_selected_svg;
 export_png_button.onclick = async () => {
     export_png_button.disabled = true;
@@ -290,6 +281,12 @@ export_webm_button.onclick = async () => {
         export_webm_button.disabled = false;
     }
 };
+document.addEventListener("menu-action", event => {
+    if (event.detail === "open-svg") void choose_svg_file();
+    else if (event.detail === "save-svg") void save_svg_file();
+    else if (event.detail === "export-png") export_png_button.click();
+    else if (event.detail === "export-webm") export_webm_button.click();
+});
 delete_keyframe_button.onclick = remove_keyframe;
 previous_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index - 1);
 next_keyframe_button.onclick = () => select_keyframe(keyframe_ui.selected_index + 1);
