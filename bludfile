@@ -1,6 +1,9 @@
 AnimScape.html: mainhtml.xml *.js build.xslt
     xsltproc --xinclude build.xslt mainhtml.xml > AnimScape.html
 
+preflight: AnimScape.html preflight.xsl
+    xsltproc --html preflight.xsl AnimScape.html | node --check
+
 index.html: AnimScape.html
     cp $< $@
 
