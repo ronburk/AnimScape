@@ -40,6 +40,7 @@
             <button id="open-selected-svg-button" type="button" hidden="hidden">Open selected</button>
             <button id="export-png-button" type="button" disabled="disabled">Export PNG</button>
             <button id="export-webm-button" type="button" disabled="disabled">Render WebM</button>
+            <span id="version">Version: development</span>
         </div>
         <dialog id="error-dialog" aria-labelledby="error-dialog-title" aria-describedby="error-dialog-message">
             <form method="dialog">

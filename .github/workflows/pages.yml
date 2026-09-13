@@ -41,6 +41,15 @@ jobs:
       - name: Build AnimScape.html
         run: ./blud
 
+      - name: Add build version
+        run: |
+          version=$(git log -1 --pretty=%B |
+            sed -n 's/^Merge pull request #\([0-9][0-9]*\).*/PR #\1/p')
+          if [ -z "$version" ]; then
+            version="commit ${GITHUB_SHA::7}"
+          fi
+          sed -i "s/Version: development/Version: $version/" AnimScape.html
+
       - name: Prepare Pages artifact
         run: |
           mkdir pages
