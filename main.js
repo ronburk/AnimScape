@@ -466,5 +466,3 @@ document.addEventListener("keydown", event => {
         fit_timeline();
     }
 });
-
-void choose_svg_file();
