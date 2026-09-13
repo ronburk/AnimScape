@@ -75,7 +75,9 @@ window.file_io = (() => {
         await delete_saved_workspace();
     }
 
-    async function choose_workspace(mode = "read") {
+    // Opening an SVG also creates its .hst history file, so the workspace
+    // must have write permission from the initial directory selection.
+    async function choose_workspace(mode = "readwrite") {
         if (!workspace_handle) {
             await load_saved_workspace();
         }
