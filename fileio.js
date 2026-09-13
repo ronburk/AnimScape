@@ -95,6 +95,11 @@ window.file_io = (() => {
         }
         if (!workspace_handle) {
             workspace_handle = await window.showDirectoryPicker({mode});
+            try {
+                await save_workspace(workspace_handle);
+            } catch (error) {
+                console.warn("Unable to persist workspace selection:", error);
+            }
         }
 
         try {
@@ -106,7 +111,6 @@ window.file_io = (() => {
                 throw new DOMException("Workspace permission was not granted.",
                                        "NotAllowedError");
             }
-            await save_workspace(workspace_handle);
         } catch (error) {
             await forget_workspace();
             throw error;
@@ -129,7 +133,11 @@ window.file_io = (() => {
         if (files.length === 0) {
             const error = new Error("The selected directory contains no SVG files.");
             error.code = "no-svg-files";
-            await forget_workspace();
+            try {
+                await forget_workspace();
+            } catch (cleanup_error) {
+                console.warn("Unable to forget workspace:", cleanup_error);
+            }
             throw error;
         }
         return files;
