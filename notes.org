@@ -1,0 +1,3 @@
+Lengthy exploration of Inkscape as root of animation pipeline:
+
+https://makeautomation.co/animation-with-inkscape/
