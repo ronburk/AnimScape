@@ -346,7 +346,7 @@ function remove_keyframe() {
 }
 
 open_selected_svg_button.onclick = open_selected_svg;
-export_png_button.onclick = async () => {
+async function export_png_file() {
     export_png_button.disabled = true;
     export_status.textContent = "";
     try {
@@ -357,8 +357,8 @@ export_png_button.onclick = async () => {
             error_ui.report("Export PNG", "The current image could not be exported as a PNG.", error);
     }
     finally { export_png_button.disabled = false; }
-};
-export_webm_button.onclick = async () => {
+}
+async function export_webm_file() {
     export_webm_button.disabled = true;
     try {
         await render_io.export_webm({}, {
@@ -372,13 +372,15 @@ export_webm_button.onclick = async () => {
         export_webm_button.textContent = "Render WebM";
         export_webm_button.disabled = false;
     }
-};
+}
+export_png_button.onclick = export_png_file;
+export_webm_button.onclick = export_webm_file;
 document.addEventListener("menu-action", event => {
     if (event.detail === "open-svg") void choose_svg_file();
     else if (event.detail === "open-directory") void choose_svg_directory();
     else if (event.detail === "save-svg") void save_svg_file();
-    else if (event.detail === "export-png") export_png_button.click();
-    else if (event.detail === "export-webm") export_webm_button.click();
+    else if (event.detail === "export-png") void export_png_file();
+    else if (event.detail === "export-webm") void export_webm_file();
     else if (event.detail === "undo") void navigate_history(-1);
     else if (event.detail === "redo") void navigate_history(1);
 });
