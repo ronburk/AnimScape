@@ -1,6 +1,7 @@
 window.main_ui = (() => {
 const save_svg_button = document.getElementById("save-svg-button");
 const export_png_button = document.getElementById("export-png-button");
+const export_status = document.getElementById("export-status");
 const export_webm_button = document.getElementById("export-webm-button");
 const undo_button = document.getElementById("undo-button");
 const redo_button = document.getElementById("redo-button");
@@ -347,8 +348,14 @@ function remove_keyframe() {
 open_selected_svg_button.onclick = open_selected_svg;
 export_png_button.onclick = async () => {
     export_png_button.disabled = true;
-    try { await render_io.export_png(); }
-    catch (error) { error_ui.report("Export PNG", "The current image could not be exported as a PNG.", error); }
+    export_status.textContent = "";
+    try {
+        const name = await render_io.export_png(svg_document);
+        export_status.textContent = "Saved " + name;
+    } catch (error) {
+        if (error.name !== "AbortError")
+            error_ui.report("Export PNG", "The current image could not be exported as a PNG.", error);
+    }
     finally { export_png_button.disabled = false; }
 };
 export_webm_button.onclick = async () => {
