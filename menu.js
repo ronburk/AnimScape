@@ -32,14 +32,16 @@ window.menu_ui = (() => {
                 close_menu();
             }
         };
-        menu_popup.onclick = event => {
+        menu_popup.addEventListener("click", event => {
             const item = event.target.closest("[data-menu-action]");
             if (!item || item.disabled) return;
+            event.preventDefault();
+            event.stopPropagation();
+            close_menu();
             document.dispatchEvent(new CustomEvent("menu-action", {
                 detail: item.dataset.menuAction
             }));
-            close_menu();
-        };
+        }, true);
     });
 
     document.addEventListener("click", event => {
