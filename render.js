@@ -177,14 +177,11 @@ async function export_webm(settings_overrides = {}, callbacks = {}) {
     }
 }
 
-async function export_png() {
+async function export_png(document) {
+    const output = await file_io.create_png(document);
     const blob = await svg_to_png_blob(get_export_svg());
-    const download_url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = download_url;
-    link.download = "AnimScape.png";
-    link.click();
-    URL.revokeObjectURL(download_url);
+    await output.write(blob);
+    return output.name;
 }
 
 return Object.freeze({

@@ -68,6 +68,7 @@
                 </div>
             </div>
             <span id="version">Version: development</span>
+            <span id="export-status" role="status" aria-live="polite"></span>
         </nav>
         <div id="svg-viewer"><div id="svg-page" hidden="hidden"></div></div>
         <dialog id="open-svg-dialog">

@@ -217,11 +217,36 @@ window.file_io = (() => {
         };
     }
 
+    async function create_png(document) {
+        if (!document || !document.file_handle || !document.workspace_handle)
+            throw new TypeError("Export PNG requires an open SVG file.");
+        const suggested_name = document.file_handle.name.replace(/\.svg$/i, ".png");
+        const file_handle = await window.showSaveFilePicker({
+            startIn: document.workspace_handle,
+            suggestedName: suggested_name,
+            types: [{description: "PNG image", accept: {"image/png": [".png"]}}]
+        });
+        return {
+            name: file_handle.name,
+            write: async blob => {
+                const writable = await file_handle.createWritable();
+                try {
+                    await writable.write(blob);
+                    await writable.close();
+                } catch (error) {
+                    await writable.abort();
+                    throw error;
+                }
+            }
+        };
+    }
+
     return Object.freeze({
         open_directory: open_directory,
         list_svg_files: list_svg_files,
         open_svg: open_svg,
         save_svg: save_svg,
+        create_png: create_png,
         create_webm: create_webm
     });
 })();
