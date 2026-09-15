@@ -116,15 +116,12 @@
                 <button id="delete-keyframe-button" type="button">Delete Keyframe</button>
             </div>
         </div>
-        <script type="text/javascript"><xi:include href="namespace.js" parse="text"/></script>
-        <script type="text/javascript"><xi:include href="message.js" parse="text"/></script>
-        <script type="text/javascript"><xi:include href="control.js" parse="text"/></script>
+        <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="fileio.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="svg.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="render.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="history.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="error.js" parse="text"/></script>
-        <script type="text/javascript"><xi:include href="main.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="menu.js" parse="text"/></script>
         <script type="text/javascript"><xi:include href="edit.js" parse="text"/></script>
     </body>
