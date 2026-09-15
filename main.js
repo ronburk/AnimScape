@@ -225,7 +225,7 @@ function report_open_error(error) {
 async function choose_svg_file() {
     if (history_navigation_busy) return;
     try {
-        svg_choices = await file_io.list_svg_files();
+        svg_choices = await AnimScape.file_io.list_svg_files();
         svg_file_list.replaceChildren();
         svg_choices.forEach((file_handle, index) => {
             const option = document.createElement("option");
@@ -245,7 +245,7 @@ async function choose_svg_file() {
 async function choose_svg_directory() {
     if (history_navigation_busy) return;
     try {
-        svg_choices = await file_io.open_directory();
+        svg_choices = await AnimScape.file_io.open_directory();
         svg_file_list.replaceChildren();
         svg_choices.forEach((file_handle, index) => {
             const option = document.createElement("option");
@@ -270,7 +270,7 @@ async function open_selected_svg() {
         return;
     }
     try {
-        const opened = await file_io.open_svg(file_handle);
+        const opened = await AnimScape.file_io.open_svg(file_handle);
         svg_document = opened;
         await history_io.open(opened);
         timeline_view.start_time = 0;
@@ -285,7 +285,7 @@ async function open_selected_svg() {
 }
 
 async function save_svg_file() {
-    try { await file_io.save_svg(svg_document, svg_document.text); }
+    try { await AnimScape.file_io.save_svg(svg_document, svg_document.text); }
     catch (error) {
         error_ui.report("Save", "The SVG could not be saved. Check that it is still accessible and try again.", error);
     }
