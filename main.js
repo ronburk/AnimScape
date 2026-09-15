@@ -350,7 +350,7 @@ async function export_png_file() {
     export_png_button.disabled = true;
     export_status.textContent = "";
     try {
-        const name = await render_io.export_png(svg_document);
+        const name = await AnimScape.render_io.export_png(svg_document);
         export_status.textContent = "Saved " + name;
     } catch (error) {
         if (error.name !== "AbortError")
@@ -361,7 +361,7 @@ async function export_png_file() {
 async function export_webm_file() {
     export_webm_button.disabled = true;
     try {
-        await render_io.export_webm({}, {
+        await AnimScape.render_io.export_webm({}, {
             on_progress: progress => {
                 export_webm_button.textContent = "Render WebM " + Math.round(progress * 100) + "%";
             }
