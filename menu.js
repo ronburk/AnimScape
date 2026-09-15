@@ -1,6 +1,8 @@
-window.menu_ui = (() => {
+/* Keep menu state private; clients only need the public close operation. */
+window.AnimScape.menu_ui = (() => {
     const menus = Array.from(document.querySelectorAll("#menu-bar .menu"));
 
+    // Close every popup so only one menu can be open at a time.
     function close_menu() {
         menus.forEach(menu => {
             menu.querySelector(".menu-popup").hidden = true;
@@ -8,6 +10,7 @@ window.menu_ui = (() => {
         });
     }
 
+    // Open a menu and focus its first enabled item for keyboard users.
     function open_menu(menu) {
         close_menu();
         const menu_popup = menu.querySelector(".menu-popup");
@@ -38,12 +41,14 @@ window.menu_ui = (() => {
             event.preventDefault();
             event.stopPropagation();
             close_menu();
+            // Menu items communicate actions without coupling this module to them.
             document.dispatchEvent(new CustomEvent("menu-action", {
                 detail: item.dataset.menuAction
             }));
         }, true);
     });
 
+    // Clicking outside the menu or pressing Escape dismisses open popups.
     document.addEventListener("click", event => {
         if (!event.target.closest("#menu-bar")) close_menu();
     });
