@@ -55,7 +55,7 @@
 - `sites-preview` requires a `package.json` with a `dev` script and serves through the internal URL `http://terminal.local:4173/`. Navigate only to that URL; do not try alternate hosts or ports.
 - This project is a plain static XML/XSLT build, so use the versioned Node HTTP adapter in `agent-files/` when browser testing is needed. It serves only the generated `AnimScape.html`, accepts the forwarded `--host`, `--port`, and `--strictPort` arguments, and returns 404 for other paths.
 - The preview root is `agent-files/`, not the repository root. The generated page must be copied there after every build, because it is ignored and is not automatically updated in that directory.
-- Start with `sites-preview start "$PWD/agent-files"`, inspect the page in the cloud browser, then run `sites-preview stop`. A successful basic check should verify the title, visible Open button, DOM state, console errors, and a screenshot when visual inspection is requested.
+- Start with `sites-preview start "$PWD/agent-files"`, inspect the page in the cloud browser, then run `sites-preview stop`. A successful basic check should verify the title, visible File menu, DOM state, console errors, and a screenshot when visual inspection is requested.
 - Ignore unrelated console errors originating from the browser-control extension itself; distinguish them from errors whose URL is the AnimScape page.
 - Do not attempt `data:`, `file:`, loopback, raw GitHub, or other alternate URLs as a workaround. The supported preview URL is the only browser target.
 
@@ -158,8 +158,8 @@ sites-preview stop
 
 ### Testing file I/O without the native picker
 
-- The production `fileio.js` and the test adapter should implement the same narrow interface: `file_io.open_svg()` and `file_io.save_svg(document, text)`.
-- For automated browser testing, first try an untracked preview-only adapter that replaces `window.file_io`. Its `open_svg()` uses an upload file input, and its `save_svg()` captures the exact SVG string (and may expose a download link).
+- The production `fileio.js` and the test adapter should implement the same narrow interface: `AnimScape.file_io.open_svg()` and `AnimScape.file_io.save_svg(document, text)`.
+- For automated browser testing, first try an untracked preview-only adapter that replaces `AnimScape.file_io`. Its `open_svg()` uses an upload file input, and its `save_svg()` captures the exact SVG string (and may expose a download link).
 - This exercises the real UI, `svg.js`, SVG parsing, rendering, keyframe creation, serialization, and reopen/save round trips. It does not test Chromium's native directory picker, filesystem permissions, actual disk writes, or persistence of native directory handles in IndexedDB.
 - Keep the adapter out of the production XSLT build and repository unless explicitly requested. Use the shared browser-facing file path under `/workspace/scratch` (mapped to `/home/oai/share`) when supplying files to the cloud browser. If `chooser.setFiles()` reports that the file cannot be found, do not keep retrying paths: use the fallback below.
 - Reliable fallback for testing the editor itself: have the temporary adapter serve `test1.svg` at `/test1.svg` and implement `open_svg()` as `fetch('/test1.svg')`. This bypasses only the cloud file-transfer bridge; it still exercises the real SVG parsing, canvas rendering, keyframe strip, duplication, deletion, playback, and keyboard controls. Report native-picker and upload-bridge limitations separately.
