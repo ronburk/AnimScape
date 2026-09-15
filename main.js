@@ -1,3 +1,21 @@
+"use strict";
+
+if (window.AnimScape !== undefined) {
+    throw new Error("window.AnimScape already exists");
+}
+
+window.AnimScape = {};
+
+const inkscape_namespace = "http://www.inkscape.org/namespaces/inkscape";
+const animscape_namespace = "https://animscape.example/ns";
+const default_keyframe_duration = 1.0;
+const default_timeline_scale = 20;
+const min_timeline_scale = 4;
+const max_timeline_scale = 4000;
+const xmlns_namespace = "http://www.w3.org/2000/xmlns/";
+const object_id_attribute = "object-id";
+
+window.addEventListener("DOMContentLoaded", () => {
 window.main_ui = (() => {
 const save_svg_button = document.getElementById("save-svg-button");
 const export_png_button = document.getElementById("export-png-button");
@@ -553,3 +571,4 @@ return Object.freeze({
     refresh_keyframe_state
 });
 })();
+});
