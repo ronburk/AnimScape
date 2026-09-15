@@ -38,7 +38,13 @@
   If the published executable is unavailable or cannot run on the current platform, obtain/build `blud` from `ronburk/blud` using that repository's build instructions.
 - From the AnimScape repository root, run `./blud`. It runs `xsltproc --xinclude build.xslt mainhtml.xml > AnimScape.html`. The generated standalone page is intentionally ignored by Git.
 - Before starting the supervised preview, copy the generated page into the preview root: `cp AnimScape.html agent-files/AnimScape.html`. The preview sandbox restricts the adapter to its selected root, so `agent-files/preview-server.mjs` must read `./AnimScape.html`; it cannot read `../AnimScape.html` from the repository root.
-- A successful build is sufficient for this setup step; browser testing is a separate step described below.
+- After building, run the JavaScript preflight check:
+
+  ```sh
+  xsltproc --html preflight.xsl AnimScape.html | node --check
+  ```
+
+- A successful build and preflight are sufficient for this setup step; browser testing is a separate step described below.
 
 ## Browser testing
 
@@ -142,7 +148,7 @@ nodeRepl.write({
 await nodeRepl.emitImage(await tab.screenshot());
 ```
 
-The initial page should have the title `AnimScape`, a visible `Open` button, and an empty SVG viewer. Keyframe controls remain hidden until an SVG is loaded. This checks page loading and inspection; it does not exercise file opening, saving, or playback. The static adapter serves the generated HTML unchanged; the file-I/O replacement described below is needed when testing SVG uploads and edits.
+The initial page should have the title `AnimScape`, a visible `File` menu, and an empty SVG viewer. The `Open SVG…` action is available from the `File` menu. Keyframe controls remain hidden until an SVG is loaded. This checks page loading and inspection; it does not exercise file opening, saving, or playback. The static adapter serves the generated HTML unchanged; the file-I/O replacement described below is needed when testing SVG uploads and edits.
 
 After inspection, stop the preview:
 
