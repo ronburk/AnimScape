@@ -1,4 +1,4 @@
-window.render_io = (() => {
+window.AnimScape.render_io = (() => {
 
 function get_export_svg() {
     const svg = document.querySelector("#svg-page > svg");
