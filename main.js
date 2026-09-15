@@ -131,7 +131,7 @@ function change_duration() {
 
 function record_document_edit(operation) {
     void history_io.record(operation, svg_document.text).catch(error =>
-        error_ui.report("History", "The edit could not be added to the history file.", error));
+        AnimScape.error_ui.report("History", "The edit could not be added to the history file.", error));
 }
 
 function update_history_menu() {
@@ -163,7 +163,7 @@ async function navigate_history(direction) {
             refresh_keyframe_ui();
         }
     } catch (error) {
-        error_ui.report(direction < 0 ? "Undo" : "Redo",
+        AnimScape.error_ui.report(direction < 0 ? "Undo" : "Redo",
             "The history state could not be restored.", error);
     } finally {
         history_navigation_busy = false;
@@ -219,7 +219,7 @@ function report_open_error(error) {
             : error.message === "The selected file is not valid SVG."
                 ? error.message
                 : "The selected SVG could not be opened.";
-    error_ui.report("Open", user_message, error);
+    AnimScape.error_ui.report("Open", user_message, error);
 }
 
 async function choose_svg_file() {
@@ -266,7 +266,7 @@ async function open_selected_svg() {
     if (history_navigation_busy) return;
     const file_handle = svg_choices[Number(svg_file_list.value)];
     if (!file_handle) {
-        error_ui.report("Open", "Select an SVG file first.");
+        AnimScape.error_ui.report("Open", "Select an SVG file first.");
         return;
     }
     try {
@@ -287,7 +287,7 @@ async function open_selected_svg() {
 async function save_svg_file() {
     try { await AnimScape.file_io.save_svg(svg_document, svg_document.text); }
     catch (error) {
-        error_ui.report("Save", "The SVG could not be saved. Check that it is still accessible and try again.", error);
+        AnimScape.error_ui.report("Save", "The SVG could not be saved. Check that it is still accessible and try again.", error);
     }
 }
 
@@ -307,7 +307,7 @@ function create_keyframe_at_time(time) {
         refresh_keyframe_ui();
     } catch (error) {
         svg_document.text = old_text;
-        error_ui.report("Add keyframe", "The new keyframe could not be added.", error);
+        AnimScape.error_ui.report("Add keyframe", "The new keyframe could not be added.", error);
     }
 }
 
@@ -324,7 +324,7 @@ function create_keyframe() {
     } catch (error) {
         svg_document.text = old_text;
         keyframe_ui.selected_index = old_index;
-        error_ui.report("Duplicate keyframe", "The keyframe could not be duplicated.", error);
+        AnimScape.error_ui.report("Duplicate keyframe", "The keyframe could not be duplicated.", error);
     }
 }
 
@@ -341,7 +341,7 @@ function remove_keyframe() {
     } catch (error) {
         svg_document.text = old_text;
         keyframe_ui.selected_index = old_index;
-        error_ui.report("Delete keyframe", "The keyframe could not be deleted.", error);
+        AnimScape.error_ui.report("Delete keyframe", "The keyframe could not be deleted.", error);
     }
 }
 
@@ -354,7 +354,7 @@ async function export_png_file() {
         export_status.textContent = "Saved " + name;
     } catch (error) {
         if (error.name !== "AbortError")
-            error_ui.report("Export PNG", "The current image could not be exported as a PNG.", error);
+            AnimScape.error_ui.report("Export PNG", "The current image could not be exported as a PNG.", error);
     }
     finally { export_png_button.disabled = false; }
 }
@@ -367,7 +367,7 @@ async function export_webm_file() {
             }
         });
     } catch (error) {
-        error_ui.report("Render WebM", "The animation could not be rendered as a WebM video.", error);
+        AnimScape.error_ui.report("Render WebM", "The animation could not be rendered as a WebM video.", error);
     } finally {
         export_webm_button.textContent = "Render WebM";
         export_webm_button.disabled = false;
