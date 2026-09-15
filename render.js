@@ -165,8 +165,8 @@ async function render_webm(svg_text, settings_overrides = {}, callbacks = {}) {
 
 async function export_webm(settings_overrides = {}, callbacks = {}) {
     const settings = get_webm_render_settings(settings_overrides);
-    if (!file_io.create_webm) throw new Error("This browser cannot save WebM video files.");
-    const output = await file_io.create_webm(settings.filename);
+    if (!AnimScape.file_io.create_webm) throw new Error("This browser cannot save WebM video files.");
+    const output = await AnimScape.file_io.create_webm(settings.filename);
     try {
         await render_webm(new XMLSerializer().serializeToString(get_export_svg()), settings,
             Object.assign({}, callbacks, {on_chunk: chunk => output.write(chunk)}));
@@ -178,7 +178,7 @@ async function export_webm(settings_overrides = {}, callbacks = {}) {
 }
 
 async function export_png(document) {
-    const output = await file_io.create_png(document);
+    const output = await AnimScape.file_io.create_png(document);
     const blob = await svg_to_png_blob(get_export_svg());
     await output.write(blob);
     return output.name;
