@@ -5,7 +5,7 @@
  * persisted in IndexedDB so it can be reused by later sessions.
  */
 
-window.file_io = (() => {
+window.AnimScape.file_io = (() => {
     let workspace_handle = null;
     const workspace_database_name = "animscape";
     const workspace_store_name = "settings";
