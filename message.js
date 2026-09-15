@@ -45,6 +45,11 @@ window.AnimScape.message = (() => {
             await new Promise(resolve => asleep = resolve);
         }
     }
+    function to_fsm(coro){
+        coro = coro();
+        coro.next();
+        return coro;
+    }
 
-    return {start, send};
+    return {start, send, to_fsm};
 })();
