@@ -1,4 +1,4 @@
-window.error_ui = (() => {
+window.AnimScape.error_ui = (() => {
     const error_dialog = document.getElementById("error-dialog");
     const error_dialog_title = document.getElementById("error-dialog-title");
     const error_dialog_message = document.getElementById("error-dialog-message");
