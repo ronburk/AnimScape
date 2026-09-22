@@ -67,6 +67,7 @@
                     <button id="redo-button" type="button" role="menuitem" data-menu-action="redo" title="Ctrl+Y or Ctrl+Shift+Z" disabled="disabled">Redo</button>
                 </div>
             </div>
+            <button id="test-button" type="button">Test</button>
             <span id="version">Version: development</span>
             <span id="export-status" role="status" aria-live="polite"></span>
         </nav>
