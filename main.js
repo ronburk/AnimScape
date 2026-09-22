@@ -37,6 +37,7 @@ const duration_input = document.getElementById("duration-input");
 const timeline_zoom_out_button = document.getElementById("timeline-zoom-out-button");
 const timeline_zoom_in_button = document.getElementById("timeline-zoom-in-button");
 const timeline_fit_button = document.getElementById("timeline-fit-button");
+const test_button = document.getElementById("test-button");
 const timeline_viewport = document.getElementById("timeline-viewport");
 const timeline_content = document.getElementById("timeline-content");
 const timeline_track = document.getElementById("timeline-track");
@@ -393,6 +394,8 @@ async function export_webm_file() {
 }
 export_png_button.onclick = export_png_file;
 export_webm_button.onclick = export_webm_file;
+test_button.onclick = () => AnimScape.error_ui.report(
+    "Test", "This is a test error message.", new Error("Test error details."));
 document.addEventListener("menu-action", event => {
     if (event.detail === "open-svg") void choose_svg_file();
     else if (event.detail === "open-directory") void choose_svg_directory();
