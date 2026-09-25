@@ -1,0 +1,103 @@
+SVG DOM round-trip fidelity
+============================
+
+The browser can use a parsed SVG DOM as the editable document model.  The
+visible SVG can be a temporary clone, while XML text is produced only when
+saving or recording history.  This is also broadly consistent with the
+architectures of Inkscape and SVG-Edit: an in-memory XML/DOM tree is edited
+and serialized when needed.
+
+The browser path is:
+
+    new DOMParser().parseFromString(text, "image/svg+xml")
+    new XMLSerializer().serializeToString(document)
+
+The SVG MIME type is important: it selects the namespace-aware XML parser,
+not the HTML parser.
+
+Experiment with fidelity_test.svg
+---------------------------------
+
+The file was parsed and serialized in a browser, then the serialized result
+was parsed again.  The namespace-aware structural comparison found:
+
+* no parser errors;
+* the same 29 elements;
+* the same element namespaces, names, nesting, and child order;
+* the same attributes and values;
+* the same text and comment nodes.
+
+The file contains ordinary Inkscape metadata, several namespaces, text,
+paths, defs, and use elements.  Its 10,123 input bytes became 9,173 output
+bytes.  The difference was formatting: whitespace/layout, attribute order,
+and empty-element syntax changed.  The Inkscape comment remained.  The test
+file did not contain a doctype, CDATA section, or processing instruction.
+
+Problems reported by other users and projects
+----------------------------------------------
+
+* Namespace handling is a real failure mode.  Namespaced attributes such as
+  xlink:href must be created with setAttributeNS(), not setAttribute().
+  Incorrect construction can produce duplicate or missing namespace
+  declarations and broken serialized SVG.
+
+* Entity spelling is not preserved.  DOM parsing resolves entity references
+  into character data, so an entity such as &#160; may serialize as the
+  corresponding non-breaking-space character.  This is usually a textual
+  change, but it matters if the source spelling itself has meaning to a
+  downstream tool.
+
+* xml:space and text whitespace need special attention.  Inkscape has had
+  save regressions involving xml:space="preserve", including accumulated
+  newlines.  A DOM round-trip can also expose differences in text layout in
+  other SVG consumers even when paths and rectangles remain unchanged.
+
+* XMLSerializer is not source-preserving.  It may normalize indentation,
+  line endings, namespace prefixes, attribute order, entity spelling, and
+  empty-element syntax.  Its result must be reparsed and tested; textual
+  equality is not the right requirement.
+
+* Comments, processing instructions, CDATA, and document-type information
+  must be tested explicitly.  Comments are DOM nodes and survived the test
+  above.  The browser's XML declaration is not ordinary document content, so
+  its exact formatting cannot be treated as preserved source text.
+
+* Foreign namespaces are intentional in SVG.  SVG specifically allows
+  unknown foreign elements and attributes to carry application-specific data
+  for round-tripping.  We must preserve them rather than filtering the DOM
+  to only known SVG elements.
+
+* foreignObject is a boundary case.  Its contents belong to another
+  namespace and must retain the correct namespace declarations; embedded SVG
+  requires an explicit SVG namespace.
+
+Implications for AnimScape
+--------------------------
+
+The persistent model should be a namespace-aware parsed SVG DOM.  Playback
+should clone it before applying transient interpolation.  Editing should
+modify the model DOM directly.  Saving and history should serialize it.
+
+All supported SVG features need round-trip tests that compare parsed
+structure and, where applicable, rendered appearance.  The test corpus
+should include xml:space and significant text whitespace, gradients, masks,
+filters, clipping paths, markers, use, linked and embedded images,
+foreignObject, foreign namespaces, CDATA, processing instructions, and
+doctype/entity cases.
+
+Useful references
+-----------------
+
+* W3C DOM Parsing and Serialization: https://www.w3.org/TR/DOM-Parsing/
+* SVG 1.1 extensibility and round-tripping:
+  https://www.w3.org/TR/SVG11/extend.html
+* Inkscape XML subsystem: https://wiki.inkscape.org/wiki/XML_subsystem
+* Inkscape xml:space save fix:
+  https://gitlab.com/inkscape/inkscape/-/merge_requests/967
+* SVG-Edit: https://github.com/SVG-Edit/svgedit
+* XMLSerializer namespace problem:
+  https://stackoverflow.com/questions/17747508/xmlserializer-mess-up-links
+* XML entity round-trip problem:
+  https://stackoverflow.com/questions/25069893/javascript-domparser-and-xmlserialier-removes-xml-entities
+* Inkscape DOM round-trip report:
+  https://alpha.inkscape.org/vectors/www.inkscapeforum.com/viewtopic99a2.html?t=8760
