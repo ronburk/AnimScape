@@ -8,13 +8,19 @@ window.AnimScape.message = (() => {
     const queue         = [];
     const fsm_stack     = [];
     let   asleep;
-    let   fsm       = (function* () { // the top-level Finite State Machine
+
+    function generator_to_fsm(coro){
+        coro = coro();
+        coro.next();
+        return coro;
+    }
+
+    let   fsm       = generator_to_fsm(function* () { // the top-level Finite State Machine
         let message = yield;          // caller can't pass anything on first .next() call
         while(message !== undefined){
             message = yield message.command();
         }
-    })();
-    fsm.next();  // run up to first yield
+    });
 
     function send(message) {
         queue.push(message);
@@ -23,7 +29,7 @@ window.AnimScape.message = (() => {
             asleep    = null;
         }
     }
-    async function start() {
+    async function start() {   // runs forever, dispatching messages
         while (true) {
             while (queue.length > 0) {
                 const message = queue.shift();
@@ -45,11 +51,5 @@ window.AnimScape.message = (() => {
             await new Promise(resolve => asleep = resolve);
         }
     }
-    function to_fsm(coro){
-        coro = coro();
-        coro.next();
-        return coro;
-    }
-
     return {start, send, to_fsm};
 })();
