@@ -165,6 +165,20 @@ sites-preview stop
 - Reliable fallback for testing the editor itself: have the temporary adapter serve `test1.svg` at `/test1.svg` and implement `open_svg()` as `fetch('/test1.svg')`. This bypasses only the cloud file-transfer bridge; it still exercises the real SVG parsing, canvas rendering, keyframe strip, duplication, deletion, playback, and keyboard controls. Report native-picker and upload-bridge limitations separately.
 - When a test reveals an application defect, report it separately from adapter limitations. In particular, duplicated SVG objects currently retain their original SVG `id` values and do not automatically receive AnimScape object identity attributes; do not mistake that for a file-I/O failure.
 
+### Testing native directory pickers
+
+For applications using `showDirectoryPicker()`:
+
+- Check `window.isSecureContext` and `typeof window.showDirectoryPicker` before diagnosing a failure.
+- The call must happen directly inside a real user-gesture handler, in the same task. Do not add a timer, promise continuation, or synthetic click while testing it:
+  ```js
+  button.addEventListener("click", () => {
+      void window.showDirectoryPicker();
+  });
+  ```
+- If the API is `"undefined"` in a secure context, the browser or profile does not expose it; report that environment limitation. If it is a function, record the actual exception, such as `AbortError`, `SecurityError`, or a permission failure.
+- If the cloud browser cannot expose or operate the native picker, use the temporary file-I/O adapter for application testing and report native directory selection as untested.
+
 ### Response formatting
 
 - Complete raw `<svg>` examples in assistant responses may be interpreted by the interface as visual SVG artifacts and render blank or misleading previews.
