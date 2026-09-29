@@ -48,6 +48,13 @@
 
 ## Browser testing
 
+### OpenAI Work environment
+
+- These instructions are specific to OpenAI Work. Work already provides the `sites-preview` runner and a CUA cloud-browser interface; do not install either or infer that browser testing is unavailable merely because a skill with a particular name is not listed.
+- Before reporting a blocker, run `command -v sites-preview` and `sites-preview --help`, verify that the checkout is beneath `/workspace`, and record the exact startup or browser error. The project still needs a supported `dev` script or `.openai/hosting.json`.
+- Start `sites-preview`, then navigate the CUA browser to the returned `http://terminal.local:...` URL. Do not substitute `file://`, loopback, guessed preview URLs, or raw GitHub URLs.
+- If cloud Chrome reports `showDirectoryPicker` as undefined, treat that as an environment limitation. Use a preview-only file-I/O adapter to test application behavior, and report native picker, real disk, and IndexedDB coverage separately.
+
 - Build the standalone page first with `./blud`; the generated `AnimScape.html` is intentionally ignored.
 - The cloud browser rejects local `file://` URLs, including files under its shared `/home/oai/share` directory. It also rejects loopback URLs such as `http://127.0.0.1:8765/`.
 - For actual browser rendering and DOM inspection, use the supported supervised preview service. Read the control-browser skill and the Sites environment instructions before doing this. Obtain the browser skill's absolute runtime directory from the `skill_root` returned by `skills.read`; do not guess its location.
